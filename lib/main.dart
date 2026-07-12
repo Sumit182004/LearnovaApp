@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
-import 'splash_screen.dart';
 
+import 'splash_screen.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'home_page.dart';
@@ -34,7 +34,7 @@ class LearnovaApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      initialRoute: "/login",
+      home: const SplashScreen(),
 
       routes: {
         "/login": (context) => const LoginPage(),
@@ -62,7 +62,6 @@ class LearnovaApp extends StatelessWidget {
               ),
             );
 
-        // Temporary until Assessment page is created
           case "/assessment":
             return MaterialPageRoute(
               builder: (_) => const HomePage(),
