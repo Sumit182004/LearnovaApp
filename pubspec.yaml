@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+    video_player: ^2.8.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -40,6 +41,13 @@ dependencies:
   firebase_storage: ^13.0.0
   google_sign_in: ^6.2.1
   sign_in_button: ^3.2.0
+
+  flutter:
+  uses-material-design: true
+  
+  # Register your assets folder
+  assets:
+    - assets/splash_animation.mp4
 
 dev_dependencies:
   flutter_test:
