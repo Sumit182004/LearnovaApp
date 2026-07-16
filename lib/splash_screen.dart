@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -11,54 +12,51 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _controller;
-  bool _videoInitialized = false;
+
+  bool _initialized = false;
   bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
+    initializeVideo();
+  }
 
+  Future<void> initializeVideo() async {
     _controller = VideoPlayerController.asset(
-      "assets/splash_animation.mp4",
-    )
-      ..initialize().then((_) {
-        if (!mounted) return;
+      "assets/splash_animations.mp4",
+    );
 
-        setState(() {
-          _videoInitialized = true;
-        });
+    await _controller.initialize();
 
-        _controller.play();
-      });
+    if (!mounted) return;
 
-    _controller.addListener(() {
-      if (_controller.value.isInitialized &&
-          !_controller.value.isPlaying &&
-          _controller.value.position >= _controller.value.duration) {
-        _navigateNext();
-      }
+    // Remove native splash only when the video is ready
+    FlutterNativeSplash.remove();
+
+    setState(() {
+      _initialized = true;
+    });
+
+    _controller.play();
+
+    Future.delayed(_controller.value.duration, () {
+      if (!mounted) return;
+      navigateNext();
     });
   }
 
-  void _navigateNext() {
+  void navigateNext() {
     if (_navigated) return;
 
     _navigated = true;
 
-    User? user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
-    if (!mounted) return;
-
-    if (user != null) {
-      Navigator.pushReplacementNamed(
-        context,
-        "/home",
-      );
+    if (user == null) {
+      Navigator.pushReplacementNamed(context, "/login");
     } else {
-      Navigator.pushReplacementNamed(
-        context,
-        "/login",
-      );
+      Navigator.pushReplacementNamed(context, "/home");
     }
   }
 
@@ -72,21 +70,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF060E14),
-      body: Center(
-        child: _videoInitialized
-            ? SizedBox.expand(
-          child: FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: _controller.value.size.width,
-              height: _controller.value.size.height,
-              child: VideoPlayer(_controller),
-            ),
-          ),
-        )
-            : const CircularProgressIndicator(
+      body: !_initialized
+          ? const Center(
+        child: CircularProgressIndicator(
           color: Color(0xFF00E5CC),
         ),
+      )
+          : SizedBox.expand(
+        child: VideoPlayer(_controller),
       ),
     );
   }

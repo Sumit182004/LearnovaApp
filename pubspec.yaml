@@ -46,6 +46,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_native_splash: ^2.4.6
+  flutter_launcher_icons: ^0.14.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -67,6 +69,8 @@ flutter:
 
   assets:
     - assets/splash_animation.mp4
+    - assets/splash_animations.mp4
+    - assets/learnovalogo1.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -95,3 +99,23 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_native_splash:
+  color: "#060E14"
+  image: "assets/learnovalogo1.png"
+
+  android: true
+  ios: true
+  web: false
+
+  android_12:
+    color: "#060E14"
+    image: "assets/learnovalogo1.png"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+
+  image_path: "assets/learnovalogo1.png"
+
+  adaptive_icon_background: "#060E14"
+  adaptive_icon_foreground: "assets/learnovalogo1.png"
