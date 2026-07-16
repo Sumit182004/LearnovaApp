@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sign_in_button/sign_in_button.dart';
+import '../widgets/animated_orb.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,22 +36,38 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon),
+      prefixIcon: Icon(
+        icon,
+        color: Colors.white70,
+      ),
+      hintStyle: const TextStyle(
+        color: Colors.white54,
+        fontSize: 15,
+      ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.white.withOpacity(0.08),
+      contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(
+          color: Colors.white24,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(
+          color: Colors.white24,
+          width: 1,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         borderSide: const BorderSide(
-          color: Colors.blue,
-          width: 1.5,
+          color: Color(0xFF7B61FF),
+          width: 2,
         ),
       ),
     );
@@ -217,12 +234,14 @@ class _LoginPageState extends State<LoginPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Color(0xff8BEAFB),
-              Color(0xff081062),
+              Color(0xFF090414),
+              Color(0xFF24104A),
+              Color(0xFF3A1C71),
+              Color(0xFF090414),
             ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
@@ -233,29 +252,58 @@ class _LoginPageState extends State<LoginPage> {
               child: Form(
                 key: _formKey,
                 child: Container(
-                  width: 360,
-                  padding:
-                  const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius:
-                    BorderRadius.circular(
-                        25),
-                  ),
-                  child: Column(
+                         width: 420,
+                         padding: const EdgeInsets.symmetric(
+                           horizontal: 30,
+                           vertical: 24,
+                         ),
+                         decoration: BoxDecoration(
+                           color: Colors.white.withOpacity(0.05),
+                           borderRadius: BorderRadius.circular(32),
+                           border: Border.all(
+                             color: Colors.white.withOpacity(0.10),
+                             width: 1,
+                           ),
+                         ),
+                         child: Column(
                     children: [
 
-                      const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 28,
-                          color: Colors.white,
-                          fontWeight:
-                          FontWeight.bold,
-                        ),
+                       Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Explore Your Universe",
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                          ),
+
+                          SizedBox(height: 12),
+
+                          Text(
+                            "Discover concepts through AI, stories, and simulations.",
+                            style: TextStyle(
+                              fontSize: 17,
+                             color: Colors.white.withOpacity(0.82),
+                              height: 1.5,
+                            ),
+                          ),
+
+                          SizedBox(height: 12),
+                        ],
                       ),
 
-                      const SizedBox(height: 30),
+                      Center(
+                        child: const Center(
+                                 child: AnimatedOrb(),
+                               ),
+                      ),
+
+                      const SizedBox(height: 18),
 
                       TextFormField(
                         controller:
@@ -329,37 +377,59 @@ class _LoginPageState extends State<LoginPage> {
                       ),
 
                       SizedBox(
-                        width:
-                        double.infinity,
-                        height: 55,
+                        width: double.infinity,
+                        height: 58,
                         child: ElevatedButton(
-                          onPressed:
-                          isLoading
-                              ? null
-                              : loginUser,
-                          style:
-                          ElevatedButton.styleFrom(
-                            backgroundColor:
-                            const Color(
-                                0xff081062),
+                          onPressed: isLoading ? null : loginUser,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: EdgeInsets.zero,
                           ),
-                          child: isLoading
-                              ? const CircularProgressIndicator(
-                            color: Colors
-                                .white,
-                          )
-                              : const Text(
-                            "Login",
-                            style:
-                            TextStyle(
-                              color: Colors
-                                  .white,
-                              fontSize: 18,
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF4C1D95),
+                                  Color(0xFF6D28D9),
+                                  Color(0xFF8B5CF6),
+                                ],
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x804C1D95),
+                                  blurRadius: 24,
+                                  spreadRadius: 1,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      "Continue →",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
 
                       const Row(
@@ -388,15 +458,37 @@ class _LoginPageState extends State<LoginPage> {
 
                       SizedBox(
                         width: double.infinity,
-                        height: 55,
-                        child: SignInButton(
-                          Buttons.google,
-                          text: "Continue with Google",
-                          onPressed: () {
-                            if (!isLoading) {
-                              googleLogin();
-                            }
-                          },
+                        height: 58,
+                        child: OutlinedButton(
+                          onPressed: isLoading ? null : googleLogin,
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.05),
+                            side: BorderSide(
+                              color: Colors.white.withOpacity(0.18),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                "assets/Google_Logo.png",
+                                height: 22,
+                              ),
+                              const SizedBox(width: 14),
+                              const Text(
+                                "Continue with Google",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
