@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sign_in_button/sign_in_button.dart';
-import '../widgets/animated_orb.dart';
+import './widgets/animated_orb.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
