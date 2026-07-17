@@ -1,5 +1,4 @@
 // login_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -79,36 +78,45 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      UserCredential credential =
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final UserCredential credential =
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      await credential.user!.reload();
+      final User user = credential.user!;
 
-      User user = FirebaseAuth.instance.currentUser!;
-
+      // Check Firebase Authentication verification status
       if (!user.emailVerified) {
+        if (!mounted) return;
+
         Navigator.pushReplacementNamed(
           context,
           "/emailVerification",
-          arguments: user.email,
+          arguments: user.email ?? "",
         );
 
-        setState(() => isLoading = false);
         return;
       }
 
-      DocumentSnapshot doc = await FirebaseFirestore.instance
+      // Email is verified, now get Firestore profile
+      final DocumentSnapshot document =
+      await FirebaseFirestore.instance
           .collection("users")
           .doc(user.uid)
           .get();
 
-      Map<String, dynamic> data =
-      doc.data() as Map<String, dynamic>;
+      if (!document.exists) {
+        throw Exception(
+          "User profile not found.",
+        );
+      }
 
-      bool assessment =
+      final Map<String, dynamic> data =
+      document.data() as Map<String, dynamic>;
+
+      final bool assessment =
           data["assessmentCompleted"] ?? false;
 
       if (!mounted) return;
@@ -125,14 +133,41 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message =
+          e.message ?? "Login Failed";
+
+      if (e.code == "invalid-credential") {
+        message = "Invalid email or password";
+      } else if (e.code == "network-request-failed") {
+        message = "No Internet Connection";
+      } else if (e.code == "user-disabled") {
+        message = "This account has been disabled";
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message ?? "Login Failed"),
+          content: Text(message),
         ),
       );
-    }
+    } catch (e) {
+      if (!mounted) return;
 
-    setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Login failed: $e",
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> googleLogin() async {

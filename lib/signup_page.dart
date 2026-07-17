@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_button/sign_in_button.dart';
+
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -41,22 +42,26 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      UserCredential credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
+      final String email = emailController.text.trim();
+
+      // Create Firebase Authentication account
+      final UserCredential credential =
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
         password: passwordController.text.trim(),
       );
 
-      await credential.user!.sendEmailVerification();
+      final User user = credential.user!;
 
+      // Save user profile in Firestore
       await FirebaseFirestore.instance
           .collection("users")
-          .doc(credential.user!.uid)
+          .doc(user.uid)
           .set({
-        "uid": credential.user!.uid,
+        "uid": user.uid,
         "name": nameController.text.trim(),
         "phone": phoneController.text.trim(),
-        "email": emailController.text.trim(),
+        "email": email,
         "standard": selectedStandard,
         "role": "student",
         "assessmentCompleted": false,
@@ -64,14 +69,16 @@ class _SignupPageState extends State<SignupPage> {
         "createdAt": FieldValue.serverTimestamp(),
       });
 
-
+      // Send Firebase email verification link
+      await user.sendEmailVerification();
 
       if (!mounted) return;
 
+      // Open verification page
       Navigator.pushReplacementNamed(
         context,
         "/emailVerification",
-        arguments: emailController.text.trim(),
+        arguments: email,
       );
     } on FirebaseAuthException catch (e) {
       String message = "Signup Failed";
@@ -92,17 +99,41 @@ class _SignupPageState extends State<SignupPage> {
         case "network-request-failed":
           message = "No Internet Connection";
           break;
+
+        case "too-many-requests":
+          message = "Too many attempts. Please try again later.";
+          break;
+
+        default:
+          message = e.message ?? "Signup Failed";
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
+      if (!mounted) return;
 
-    setState(() {
-      isLoading = false;
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Something went wrong: $e",
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
+
   Future<void> signInWithGoogle() async {
     setState(() {
       isLoading = true;

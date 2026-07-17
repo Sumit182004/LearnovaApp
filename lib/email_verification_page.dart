@@ -1,5 +1,3 @@
-// email_verification_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,66 +17,165 @@ class EmailVerificationPage extends StatefulWidget {
 class _EmailVerificationPageState
     extends State<EmailVerificationPage> {
   bool isLoading = false;
-
-  Future<void> resendEmail() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      await user?.sendEmailVerification();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Verification Email Sent Again",
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
+  bool isResending = false;
 
   Future<void> checkVerification() async {
     setState(() {
       isLoading = true;
     });
 
-    await FirebaseAuth.instance.currentUser?.reload();
+    try {
+      // Reload user to get the latest verification status
+      await FirebaseAuth.instance.currentUser?.reload();
 
-    User? user = FirebaseAuth.instance.currentUser;
+      final User? user =
+          FirebaseAuth.instance.currentUser;
 
-    if (user != null && user.emailVerified) {
+      if (user == null) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Your session has expired. Please login again.",
+            ),
+          ),
+        );
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          "/login",
+              (route) => false,
+        );
+
+        return;
+      }
+
+      if (user.emailVerified) {
+        // Verification successful
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Email verified successfully. Please login.",
+            ),
+          ),
+        );
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          "/login",
+              (route) => false,
+        );
+      } else {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Email is still not verified. Please click the verification link sent to your email.",
+            ),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(
-        context,
-        "/login",
-      );
-    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Email is still not verified.",
+            e.message ??
+                "Unable to check email verification.",
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+  }
 
+  Future<void> resendVerificationEmail() async {
     setState(() {
-      isLoading = false;
+      isResending = true;
     });
+
+    try {
+      final User? user =
+          FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Your session has expired. Please login again.",
+            ),
+          ),
+        );
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          "/login",
+              (route) => false,
+        );
+
+        return;
+      }
+
+      await user.sendEmailVerification();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Verification email sent again.",
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message =
+          e.message ?? "Unable to resend verification email.";
+
+      if (e.code == "too-many-requests") {
+        message =
+        "Too many requests. Please wait before trying again.";
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isResending = false;
+        });
+      }
+    }
+  }
+
+  Future<void> backToLogin() async {
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      "/login",
+          (route) => false,
+    );
   }
 
   @override
@@ -87,20 +184,18 @@ class _EmailVerificationPageState
       backgroundColor: const Color(0xff081062),
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(25),
             child: Container(
               width: 380,
               padding: const EdgeInsets.all(25),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius:
-                BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
                   const Icon(
                     Icons.mark_email_read,
                     size: 90,
@@ -138,7 +233,7 @@ class _EmailVerificationPageState
                   const SizedBox(height: 20),
 
                   const Text(
-                    "Please open your email and click the verification link before logging in.",
+                    "Please open your email and click the verification link. Then return here and press the button below.",
                     textAlign: TextAlign.center,
                   ),
 
@@ -174,9 +269,19 @@ class _EmailVerificationPageState
                     width: double.infinity,
                     height: 55,
                     child: OutlinedButton(
-                      onPressed:
-                      isLoading ? null : resendEmail,
-                      child: const Text(
+                      onPressed: isResending
+                          ? null
+                          : resendVerificationEmail,
+                      child: isResending
+                          ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child:
+                        CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : const Text(
                         "Resend Email",
                         style: TextStyle(
                           fontSize: 17,
@@ -188,16 +293,7 @@ class _EmailVerificationPageState
                   const SizedBox(height: 15),
 
                   TextButton(
-                    onPressed: () async {
-
-
-                      if (!mounted) return;
-
-                      Navigator.pushReplacementNamed(
-                        context,
-                        "/login",
-                      );
-                    },
+                    onPressed: backToLogin,
                     child: const Text(
                       "Back To Login",
                     ),
