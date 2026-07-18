@@ -87,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final User user = credential.user!;
 
-      // Check Firebase Authentication verification status
+      // Check email verification
       if (!user.emailVerified) {
         if (!mounted) return;
 
@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Email is verified, now get Firestore profile
+      // Get user profile from Firestore
       final DocumentSnapshot document =
       await FirebaseFirestore.instance
           .collection("users")
@@ -112,13 +112,21 @@ class _LoginPageState extends State<LoginPage> {
           "User profile not found.",
         );
       }
+
       final Map<String, dynamic> data =
-      document.data() as Map<String, dynamic>;
+      document.data()
+      as Map<String, dynamic>;
 
       final String role =
-          data["role"]?.toString().toLowerCase() ?? "student";
+          data["role"]
+              ?.toString()
+              .toLowerCase() ??
+              "student";
 
-// ADMIN LOGIN
+      // ======================================================
+      // ADMIN
+      // ======================================================
+
       if (role == "admin") {
         if (!mounted) return;
 
@@ -131,9 +139,21 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-// STUDENT LOGIN
+      // ======================================================
+      // STUDENT
+      // ======================================================
+
       final bool assessmentCompleted =
           data["assessmentCompleted"] ?? false;
+
+      final String standard =
+          data["standard"]?.toString() ?? "";
+
+      if (standard.isEmpty) {
+        throw Exception(
+          "Student standard is not available.",
+        );
+      }
 
       if (!mounted) return;
 
@@ -148,6 +168,7 @@ class _LoginPageState extends State<LoginPage> {
           context,
           "/assessment",
               (route) => false,
+          arguments: standard,
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -157,14 +178,24 @@ class _LoginPageState extends State<LoginPage> {
           e.message ?? "Login Failed";
 
       if (e.code == "invalid-credential") {
-        message = "Invalid email or password";
-      } else if (e.code == "network-request-failed") {
-        message = "No Internet Connection";
-      } else if (e.code == "user-disabled") {
-        message = "This account has been disabled";
+        message =
+        "Invalid email or password";
+      } else if (
+      e.code ==
+          "network-request-failed"
+      ) {
+        message =
+        "No Internet Connection";
+      } else if (
+      e.code ==
+          "user-disabled"
+      ) {
+        message =
+        "This account has been disabled";
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(message),
         ),
@@ -172,7 +203,8 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             "Login failed: $e",
@@ -196,11 +228,11 @@ class _LoginPageState extends State<LoginPage> {
       await GoogleSignIn().signIn();
 
       if (googleUser == null) {
-        setState(() => isLoading = false);
         return;
       }
 
-      final auth = await googleUser.authentication;
+      final auth =
+      await googleUser.authentication;
 
       final credential =
       GoogleAuthProvider.credential(
@@ -208,53 +240,110 @@ class _LoginPageState extends State<LoginPage> {
         idToken: auth.idToken,
       );
 
-      UserCredential userCredential =
+      final UserCredential userCredential =
       await FirebaseAuth.instance
-          .signInWithCredential(credential);
+          .signInWithCredential(
+        credential,
+      );
 
-      User user = userCredential.user!;
+      final User user =
+      userCredential.user!;
 
-      DocumentSnapshot document =
+      final DocumentSnapshot document =
       await FirebaseFirestore.instance
           .collection("users")
           .doc(user.uid)
           .get();
 
+      // New Google user must complete profile first
       if (!document.exists) {
+        if (!mounted) return;
+
         Navigator.pushReplacementNamed(
           context,
           "/googleProfile",
           arguments: user,
         );
+
         return;
       }
 
-      Map<String, dynamic> data =
-      document.data() as Map<String, dynamic>;
+      final Map<String, dynamic> data =
+      document.data()
+      as Map<String, dynamic>;
 
-      bool assessment =
+      final String role =
+          data["role"]
+              ?.toString()
+              .toLowerCase() ??
+              "student";
+
+      // ======================================================
+      // ADMIN
+      // ======================================================
+
+      if (role == "admin") {
+        if (!mounted) return;
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          "/admin",
+              (route) => false,
+        );
+
+        return;
+      }
+
+      // ======================================================
+      // STUDENT
+      // ======================================================
+
+      final bool assessmentCompleted =
           data["assessmentCompleted"] ?? false;
 
-      if (assessment) {
-        Navigator.pushReplacementNamed(
+      final String standard =
+          data["standard"]?.toString() ?? "";
+
+      if (standard.isEmpty) {
+        throw Exception(
+          "Student standard is not available.",
+        );
+      }
+
+      if (!mounted) return;
+
+      if (assessmentCompleted) {
+        Navigator.pushNamedAndRemoveUntil(
           context,
           "/home",
+              (route) => false,
         );
       } else {
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamedAndRemoveUntil(
           context,
           "/assessment",
+              (route) => false,
+          arguments: standard,
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(
+            e.toString(),
+          ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
-
-    setState(() => isLoading = false);
   }
 
   Future<void> forgotPassword() async {

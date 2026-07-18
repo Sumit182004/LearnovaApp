@@ -12,7 +12,7 @@ import 'home_page.dart';
 import 'email_verification_page.dart';
 import 'google_profile_page.dart';
 import 'admin_dashboard.dart';
-
+import 'assessment_page.dart';
 Future<void> main() async {
   WidgetsBinding widgetsBinding =
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,31 +53,42 @@ class LearnovaApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case "/emailVerification":
-            final email = settings.arguments as String;
+            final String email =
+            settings.arguments as String;
 
             return MaterialPageRoute(
-              builder: (_) => EmailVerificationPage(
-                email: email,
-              ),
+              builder: (_) =>
+                  EmailVerificationPage(
+                    email: email,
+                  ),
             );
 
           case "/googleProfile":
-            final user = settings.arguments as User;
+            final User user =
+            settings.arguments as User;
 
             return MaterialPageRoute(
-              builder: (_) => GoogleProfilePage(
-                user: user,
-              ),
+              builder: (_) =>
+                  GoogleProfilePage(
+                    user: user,
+                  ),
             );
 
           case "/assessment":
+            final String standard =
+            settings.arguments as String;
+
             return MaterialPageRoute(
-              builder: (_) => const HomePage(),
+              builder: (_) =>
+                  AssessmentPage(
+                    standard: standard,
+                  ),
             );
 
           default:
             return MaterialPageRoute(
-              builder: (_) => const LoginPage(),
+              builder: (_) =>
+              const LoginPage(),
             );
         }
       },
