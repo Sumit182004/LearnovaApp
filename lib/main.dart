@@ -11,6 +11,7 @@ import 'signup_page.dart';
 import 'home_page.dart';
 import 'email_verification_page.dart';
 import 'google_profile_page.dart';
+import 'admin_dashboard.dart';
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding =
@@ -46,6 +47,7 @@ class LearnovaApp extends StatelessWidget {
         "/login": (context) => const LoginPage(),
         "/signup": (context) => const SignupPage(),
         "/home": (context) => const HomePage(),
+        "/admin": (context) => const AdminDashboard(),
       },
 
       onGenerateRoute: (settings) {

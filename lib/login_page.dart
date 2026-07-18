@@ -112,24 +112,42 @@ class _LoginPageState extends State<LoginPage> {
           "User profile not found.",
         );
       }
-
       final Map<String, dynamic> data =
       document.data() as Map<String, dynamic>;
 
-      final bool assessment =
+      final String role =
+          data["role"]?.toString().toLowerCase() ?? "student";
+
+// ADMIN LOGIN
+      if (role == "admin") {
+        if (!mounted) return;
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          "/admin",
+              (route) => false,
+        );
+
+        return;
+      }
+
+// STUDENT LOGIN
+      final bool assessmentCompleted =
           data["assessmentCompleted"] ?? false;
 
       if (!mounted) return;
 
-      if (assessment) {
-        Navigator.pushReplacementNamed(
+      if (assessmentCompleted) {
+        Navigator.pushNamedAndRemoveUntil(
           context,
           "/home",
+              (route) => false,
         );
       } else {
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamedAndRemoveUntil(
           context,
           "/assessment",
+              (route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
