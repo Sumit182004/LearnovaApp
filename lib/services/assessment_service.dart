@@ -6,11 +6,10 @@ import 'package:http/http.dart' as http;
 class AssessmentService {
   // Replace this after deploying the FastAPI backend.
   static const String baseUrl =
-      'https://YOUR-BACKEND-URL.onrender.com';
+      'https://learnovaapp-lfgn.onrender.com';
 
-  // =========================================================
   // GENERATE ASSESSMENT
-  // =========================================================
+
 
   static Future<Map<String, dynamic>> generateAssessment({
     required String standard,

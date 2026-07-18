@@ -60,6 +60,7 @@ class _GoogleProfilePageState
     Navigator.pushReplacementNamed(
       context,
       "/assessment",
+      arguments: selectedStandard,
     );
 
     setState(() {
