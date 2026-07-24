@@ -197,9 +197,19 @@ class _SignupPageState extends State<SignupPage> {
             "/home",
           );
         } else {
+          final String standard =
+              data["standard"]?.toString() ?? "";
+
+          if (standard.isEmpty) {
+            throw Exception(
+              "Student standard is not available.",
+            );
+          }
+
           Navigator.pushReplacementNamed(
             context,
             "/assessment",
+            arguments: standard,
           );
         }
       }
