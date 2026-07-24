@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_button/sign_in_button.dart';
+import 'package:learnovaapp/widgets/animated_orb.dart';
+
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -222,22 +224,22 @@ class _SignupPageState extends State<SignupPage> {
       hintText: hint,
       prefixIcon: Icon(icon),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.white.withOpacity(.95),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         borderSide: BorderSide.none,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(
-          color: Colors.blue,
-          width: 1.5,
-        ),
-      ),
+     focusedBorder: OutlineInputBorder(
+       borderRadius: BorderRadius.circular(20),
+       borderSide: const BorderSide(
+         color: Color(0xFF8B5CF6),
+         width: 2,
+       ),
+     ),
     );
   }
 
@@ -249,13 +251,16 @@ class _SignupPageState extends State<SignupPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xff8BEAFB),
-              Color(0xff081062),
-            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF161032),
+              Color(0xFF281B52),
+              Color(0xFF3A2D73),
+            ],
           ),
+
+
         ),
         child: SafeArea(
           child: Center(
@@ -267,11 +272,22 @@ class _SignupPageState extends State<SignupPage> {
                   width: 360,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    color: Colors.white.withOpacity(0.15),
+
+                    color: Colors.white.withOpacity(.08),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(.15),
+                    ),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   child: Column(
                     children: [
+                    const SizedBox(
+                      height: 120,
+                      width: 120,
+                      child: AnimatedOrb(),
+                    ),
+
+                    const SizedBox(height: 20),
                       const Text(
                         "Create Account",
                         style: TextStyle(
@@ -280,6 +296,18 @@ class _SignupPageState extends State<SignupPage> {
                           color: Colors.white,
                         ),
                       ),
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        "Start your learning journey with AI",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
 
                       const SizedBox(height: 25),
 
@@ -407,32 +435,49 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(
                         width: double.infinity,
                         height: 55,
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : registerUser,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff081062),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(15),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF4C1D95),
+                                Color(0xFF6D28D9),
+                                Color(0xFF8B5CF6),
+                              ],
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF8B5CF6).withOpacity(0.35),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          child: isLoading
-                              ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                              : const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : registerUser,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
+                            child: isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text(
+                                    "Create Account",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 20),
-
+                        const SizedBox(height: 20),
                       Row(
                         children: const [
                           Expanded(child: Divider()),
@@ -453,19 +498,42 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 20),
 
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: SignInButton(
-                          Buttons.google,
-                          text: "Continue with Google",
-                          onPressed: () {
-                            if (!isLoading) {
-                              signInWithGoogle();
-                            }
-                          },
-                        ),
-                      ),
+
+                               SizedBox(
+                                 width: double.infinity,
+                                 height: 58,
+                                 child: OutlinedButton(
+                                   onPressed: isLoading ? null : signInWithGoogle,
+                                   style: OutlinedButton.styleFrom(
+                                     backgroundColor: Colors.white.withOpacity(0.05),
+                                     side: BorderSide(
+                                       color: Colors.white.withOpacity(0.18),
+                                     ),
+                                     shape: RoundedRectangleBorder(
+                                       borderRadius: BorderRadius.circular(20),
+                                     ),
+                                   ),
+                                   child: Row(
+                                     mainAxisAlignment: MainAxisAlignment.center,
+                                     children: [
+                                       Image.asset(
+                                         "assets/Google_Logo.png",
+                                         height: 22,
+                                       ),
+                                       const SizedBox(width: 14),
+                                       const Text(
+                                         "Continue with Google",
+                                         style: TextStyle(
+                                           color: Colors.white,
+                                           fontSize: 16,
+                                           fontWeight: FontWeight.w600,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ),
+
 
                       const SizedBox(height: 25),
 
