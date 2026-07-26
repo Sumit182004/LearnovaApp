@@ -8,7 +8,7 @@ import 'firebase_options.dart';
 import 'splash_screen.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
-import 'home_page.dart';
+import 'screens/home/home_page.dart';
 import 'email_verification_page.dart';
 import 'google_profile_page.dart';
 import 'admin_dashboard.dart';
