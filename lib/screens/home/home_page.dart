@@ -116,33 +116,27 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-
-        body: Container(
-
-        width: double.infinity,
-
-        height: double.infinity,
-
-        decoration: const BoxDecoration(
-
-        gradient: LinearGradient(
-
-        colors: [
-
-        Color(0xff8BEAFB),
-
-    Color(0xff081062),
-
-    ],
-
-    begin: Alignment.topCenter,
-
-    end: Alignment.bottomCenter,
-
-    ),
-
-    ),
+   return Scaffold(
+     backgroundColor: const Color(0xFF09051C),
+     body: Container(
+       width: double.infinity,
+       height: double.infinity,
+       decoration: const BoxDecoration(
+         gradient: LinearGradient(
+           begin: Alignment.topCenter,
+           end: Alignment.bottomCenter,
+           colors: [
+             Color(0xFF09051C),
+             Color(0xFF150A35),
+             Color(0xFF23104D),
+           ],
+         ),
+       ),
+       child: const SafeArea(
+         child: SizedBox(),
+       ),
+     ),
+   );
 
     child: SafeArea(
 
