@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'screens/home/home_page.dart';
+
 import 'firebase_options.dart';
 
 import 'splash_screen.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
+import 'screens/home/home_page.dart';
 import 'email_verification_page.dart';
 import 'google_profile_page.dart';
 import 'admin_dashboard.dart';

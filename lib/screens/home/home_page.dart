@@ -534,7 +534,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: List.generate(
               6,
-              (index) => Container(
+                  (index) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 width: 8,
                 height: 8,
