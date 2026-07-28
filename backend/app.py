@@ -259,28 +259,26 @@ IMPORTANT RULES
 
 1. Generate exactly the required number of questions.
 
-2. Questions must be appropriate for Class {standard}.
+2. Questions must be suitable for an average Class {standard} student.
 
-3. Do not generate questions above the expected Class
-   {standard} academic level.
+3. Focus mainly on NCERT-level questions.
 
-4. Questions should test conceptual understanding,
-   reasoning and application.
+4. Beginner questions should be very easy and based on basic concepts.
 
-5. Avoid extremely obscure facts.
+5. Intermediate questions should be of medium difficulty.
 
-6. Every question must have exactly four options.
+6. Advanced questions should be only slightly harder than intermediate.
+Avoid Olympiad, JEE, NEET or extremely tricky questions.
 
-7. Exactly one option must be correct.
+7. Use simple English.
 
-8. Do not repeat the same question or concept unnecessarily.
+8. Avoid lengthy calculations.
 
-9. Mathematics calculations must be accurate.
+9. Avoid confusing wording.
 
-10. Science, Physics and Chemistry facts must be accurate.
+10. Every question must have exactly four options.
 
-11. Difficulty labels must accurately represent:
-    beginner, intermediate or advanced.
+11. Exactly one option must be correct.
 
 12. Return ONLY valid JSON.
 
@@ -436,7 +434,7 @@ def generate_assessment(
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
         )
 
