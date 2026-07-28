@@ -659,9 +659,7 @@ def submit_assessment(
             result["correctAnswers"] += 1
             result[difficulty]["correct"] += 1
 
-    # CLASSIFY PROFICIENCY
-
-
+    # CLASSIFY PROFICIENCYt
     for subject, result in subject_results.items():
 
         total_correct = result[
