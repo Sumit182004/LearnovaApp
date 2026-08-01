@@ -78,6 +78,11 @@ flutter:
     - assets/orb.png
     - assets/Google_Logo.png
     - assets/updated_icon.png
+    - assets/ai_mascot.png
+    - assets/Biology_3D.png
+    - assets/Chemistry_3D.png
+    - assets/Physics_3D.png
+    - assets/Maths_3D.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

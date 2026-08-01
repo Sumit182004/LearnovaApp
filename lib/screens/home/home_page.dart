@@ -10,7 +10,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   int selectedIndex = 0;
   String userName = "Mahek";
   String currentSubject = "Biology";
@@ -18,11 +18,35 @@ class _HomePageState extends State<HomePage> {
   String currentTopic = "The Human Heart";
   double progress = 0.65;
 
+  // --- Animation Variables ---
+  late AnimationController _robotController;
+  late Animation<Offset> _robotAnimation;
+
   @override
   void initState() {
     super.initState();
     loadUser();
     loadContinueLearning();
+
+    // --- Initialize Animation ---
+    _robotController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2), // Speed of the float
+    )..repeat(reverse: true); // Makes it go up and down endlessly
+
+    _robotAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, -0.06), // How high it floats
+    ).animate(CurvedAnimation(
+      parent: _robotController,
+      curve: Curves.easeInOut, // Smooth easing
+    ));
+  }
+
+  @override
+  void dispose() {
+    _robotController.dispose(); // Always dispose controllers to prevent memory leaks!
+    super.dispose();
   }
 
   Future<void> loadUser() async {
@@ -167,136 +191,191 @@ class _HomePageState extends State<HomePage> {
   }
 
   // --- AI Mascot Banner ---
-  Widget _buildAIBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xff1E1942).withOpacity(0.8),
-            const Color(0xff121026).withOpacity(0.8),
-          ],
-        ),
-        border: Border.all(color: Colors.purpleAccent.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.15),
-            blurRadius: 20,
-            spreadRadius: 2,
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Hi $userName! 👋",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  "What do you want to explore today?",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, "/assistant"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff6C5CE7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("Let's Start ", style: TextStyle(color: Colors.white)),
-                      Icon(Icons.arrow_forward, size: 16, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Bot Icon/Asset Placeholder
-          Container(
-            height: 90,
-            width: 90,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xff6C5CE7).withOpacity(0.2),
-            ),
-            child: const Icon(
-              Icons.smart_toy,
-              size: 50,
-              color: Colors.cyanAccent,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ // --- AI Mascot Banner (3D Pop-Out Effect & Glow) ---
+ // --- AI Mascot Banner (Animated 3D Pop-Out) ---
+   Widget _buildAIBanner() {
+     return SizedBox(
+       height: 175, // INCREASED HEIGHT to fix the 34-pixel overflow error!
+       child: Stack(
+         clipBehavior: Clip.none,
+         alignment: Alignment.bottomCenter,
+         children: [
+           // 1. The Background Banner Card
+           Container(
+             width: double.infinity,
+             padding: const EdgeInsets.all(20),
+             decoration: BoxDecoration(
+               borderRadius: BorderRadius.circular(24),
+               gradient: LinearGradient(
+                 colors: [
+                   const Color(0xff1E1942).withOpacity(0.8),
+                   const Color(0xff121026).withOpacity(0.8),
+                 ],
+               ),
+               border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.purple.withOpacity(0.2),
+                   blurRadius: 20,
+                   spreadRadius: 2,
+                 )
+               ],
+             ),
+             child: Row(
+               children: [
+                 // Text and Button Section
+                 Expanded(
+                   flex: 3,
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     mainAxisSize: MainAxisSize.min,
+                     children: [
+                       Text(
+                         "Hi $userName! 👋",
+                         style: const TextStyle(
+                           color: Colors.white,
+                           fontWeight: FontWeight.bold,
+                           fontSize: 18,
+                         ),
+                       ),
+                       const SizedBox(height: 6),
+                       const Text(
+                         "What do you want to explore today?",
+                         style: TextStyle(color: Colors.white70, fontSize: 13),
+                       ),
+                       const SizedBox(height: 14),
+                       ElevatedButton(
+                         onPressed: () => Navigator.pushNamed(context, "/assistant"),
+                         style: ElevatedButton.styleFrom(
+                           backgroundColor: const Color(0xff6C5CE7),
+                           shape: RoundedRectangleBorder(
+                             borderRadius: BorderRadius.circular(20),
+                           ),
+                           padding: const EdgeInsets.symmetric(
+                             horizontal: 16,
+                             vertical: 10,
+                           ),
+                         ),
+                         child: const Row(
+                           mainAxisSize: MainAxisSize.min,
+                           children: [
+                             Text("Let's Start ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                             Icon(Icons.arrow_forward, size: 16, color: Colors.white),
+                           ],
+                         ),
+                       ),
+                     ],
+                   ),
+                 ),
+                 // Empty space to push the robot to the right
+                 const Expanded(flex: 2, child: SizedBox()),
+               ],
+             ),
+           ),
+
+           // 2. The Animated 3D Floating Robot
+           Positioned(
+             right: 0,
+             bottom: 5,
+             child: SlideTransition(
+               position: _robotAnimation, // <--- ANIMATION APPLIED HERE
+               child: Container(
+                 decoration: BoxDecoration(
+                   shape: BoxShape.circle,
+                   boxShadow: [
+                     BoxShadow(
+                       color: Colors.cyanAccent.withOpacity(0.4),
+                       blurRadius: 40,
+                       spreadRadius: -15,
+                     ),
+                   ],
+                 ),
+                 child: Image.asset(
+                   'assets/ai_mascot.png',
+                   height: 180, // Slightly taller so it still pops out of the new larger card
+                   fit: BoxFit.contain,
+                 ),
+               ),
+             ),
+           ),
+         ],
+       ),
+     );
+   }
 
   // --- Subject Universe Horizontal Scroll ---
   Widget _buildSubjectUniverse() {
     final subjects = [
-      {'title': 'Mathematics', 'icon': Icons.functions, 'color': Colors.purpleAccent},
-      {'title': 'Science', 'icon': Icons.public, 'color': Colors.lightBlueAccent},
-      {'title': 'Chemistry', 'icon': Icons.science, 'color': Colors.pinkAccent},
-      {'title': 'Biology', 'icon': Icons.eco, 'color': Colors.greenAccent},
-      {'title': 'Programming', 'icon': Icons.code, 'color': Colors.blueAccent},
+      {
+        'title': 'Planet Mathematics',
+        'asset': 'assets/Maths_3D.png',
+        'glowColor': Colors.lightBlueAccent,
+      },
+      {
+        'title': 'Planet Physics',
+        'asset': 'assets/Physics_3D.png',
+        'glowColor': Colors.cyanAccent,
+      },
+      {
+        'title': 'Planet Chemistry',
+        'asset': 'assets/Chemistry_3D.png',
+        'glowColor': Colors.orangeAccent,
+      },
+      {
+        'title': ' Planet Biology',
+        'asset': 'assets/Biology_3D.png',
+        'glowColor': Colors.greenAccent,
+      },
     ];
 
     return SizedBox(
-      height: 95,
+      height: 105,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: subjects.length,
         itemBuilder: (context, index) {
-          final item = subjects[index];
+          final subject = subjects[index];
+          final glowColor = subject['glowColor'] as Color;
+
           return Container(
             margin: const EdgeInsets.only(right: 14),
             child: Column(
               children: [
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 65,
+                  height: 65,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    gradient: LinearGradient(
-                      colors: [
-                        (item['color'] as Color).withOpacity(0.3),
-                        Colors.black26,
-                      ],
-                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xff121026),
                     border: Border.all(
-                      color: (item['color'] as Color).withOpacity(0.5),
+                      color: glowColor.withOpacity(0.4),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: glowColor.withOpacity(0.3),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    item['icon'] as IconData,
-                    color: item['color'] as Color,
-                    size: 28,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      subject['asset'] as String,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  item['title'] as String,
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  subject['title'] as String,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -534,7 +613,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: List.generate(
               6,
-                  (index) => Container(
+              (index) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 width: 8,
                 height: 8,
