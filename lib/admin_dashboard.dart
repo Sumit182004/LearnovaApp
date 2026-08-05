@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 enum AdminPage {
   dashboard,
   syllabus,
@@ -23,8 +23,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   final FirebaseStorage storage = FirebaseStorage.instance;
 
-  String selectedClass = "Class 10";
-  String selectedSubject = "Mathematics";
+  String selectedClass = "class10";
+  String selectedSubject = "Maths";
 
   bool isUploading = false;
   double uploadProgress = 0;
@@ -33,21 +33,45 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool isLoadingFiles = false;
 
   final Map<String, List<String>> subjectsByClass = {
-    "Class 10": [
-      "Mathematics",
-      "Science",
-      "English",
-    ],
-    "Class 12": [
+    "class10": [
+      "Maths",
       "Physics",
       "Chemistry",
-      "Mathematics",
+      "Biology",
+    ],
+    "class12": [
+      "Maths",
+      "Physics",
+      "Chemistry",
       "Biology",
     ],
   };
 
   List<String> get currentSubjects =>
       subjectsByClass[selectedClass] ?? [];
+
+  String get storageClass {
+    return selectedClass.toLowerCase().replaceAll(" ", "");
+  }
+
+  String get storageSubject {
+    switch (selectedSubject.toLowerCase()) {
+      case "maths":
+        return "maths";
+
+      case "physics":
+        return "physics";
+
+      case "chemistry":
+        return "chemistry";
+
+      case "biology":
+        return "biology";
+
+      default:
+        return selectedSubject.toLowerCase();
+    }
+  }
 
   void changeClass(String? value) {
     if (value == null) return;
@@ -92,7 +116,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
 
     final File file = File(filePath);
-    final String fileName = result.files.single.name;
+    String fileName = result.files.single.name
+        .replaceAll(" ", "_")
+        .replaceAll("(1)", "")
+        .replaceAll("(2)", "")
+        .toLowerCase();
 
     setState(() {
       isUploading = true;
@@ -101,7 +129,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     try {
       final Reference reference = storage.ref().child(
-        "syllabus/$selectedClass/$selectedSubject/$fileName",
+        "syllabus/$storageClass/$storageSubject/$fileName",
       );
 
       final UploadTask uploadTask = reference.putFile(
@@ -189,7 +217,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     try {
       final Reference reference = storage.ref().child(
-        "images/$selectedClass/$selectedSubject/$fileName",
+        "images/$storageClass/$storageSubject/$fileName",
       );
 
       final UploadTask uploadTask = reference.putFile(file);
@@ -254,7 +282,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     try {
       final Reference reference = storage.ref().child(
-        "syllabus/$selectedClass/$selectedSubject",
+        "syllabus/$storageClass/$storageSubject",
       );
 
       final ListResult result = await reference.listAll();
@@ -863,6 +891,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   });
 
                   loadFiles();
+                },
+              ),
+
+              const Divider(),
+
+              ListTile(
+                leading: const Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                ),
+                title: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+
+                  await FirebaseAuth.instance.signOut();
+
+                  if (!mounted) return;
+
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    "/login",
+                        (route) => false,
+                  );
                 },
               ),
             ],

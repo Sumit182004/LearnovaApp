@@ -107,6 +107,13 @@ class AnswerItem(BaseModel):
 class AssessmentSubmission(BaseModel):
     assessmentId: str
     answers: list[AnswerItem]
+
+class ExplanationRequest(BaseModel):
+    className: str
+    subject: str
+    chapter: str
+    topic: str
+    content: str
 # ASSESSMENT CONFIGURATION
 
 ASSESSMENT_CONFIG = {
@@ -205,13 +212,49 @@ ASSESSMENT_CONFIG = {
     },
 }
 ACTIVE_ASSESSMENTS = {}
+
+# EXPLANATION CACHE
+
+def create_cache_key(
+        class_name: str,
+        subject: str,
+        chapter: str,
+        topic: str,
+):
+
+    return "_".join([
+        class_name.lower().strip(),
+        subject.lower().strip(),
+        chapter.lower().strip(),
+        topic.lower().strip(),
+    ]).replace(" ", "_")
+
+def get_cached_explanation(cache_key: str):
+    document = (
+        db.collection("explanations")
+        .document(cache_key)
+        .get()
+    )
+
+    if document.exists:
+        return document.to_dict()
+
+    return None
+
+def save_explanation(
+        cache_key: str,
+        data: dict,
+):
+
+    db.collection("explanations").document(
+        cache_key
+    ).set(data)
 # GENERATE PROMPT
 
 def create_assessment_prompt(
         standard: str,
         config: dict,
 ):
-
     subject_instructions = ""
 
     for subject, details in config.items():
@@ -258,37 +301,21 @@ Generate exactly 15 questions.
 IMPORTANT RULES
 
 1. Generate exactly the required number of questions.
-
 2. Questions must be suitable for an average Class {standard} student.
-
 3. Focus mainly on NCERT-level questions.
-
 4. Beginner questions should be very easy and based on basic concepts.
-
 5. Intermediate questions should be of medium difficulty.
-
 6. Advanced questions should be only slightly harder than intermediate.
 Avoid Olympiad, JEE, NEET or extremely tricky questions.
-
 7. Use simple English.
-
 8. Avoid lengthy calculations.
-
 9. Avoid confusing wording.
-
 10. Every question must have exactly four options.
-
 11. Exactly one option must be correct.
-
 12. Return ONLY valid JSON.
-
 13. Do not include Markdown formatting.
-
 14. Do not include explanations before or after the JSON.
-
-
 RETURN EXACTLY THIS FORMAT
-
 {{
     "questions": [
         {{
@@ -305,30 +332,211 @@ RETURN EXACTLY THIS FORMAT
         }}
     ]
 }}
-
-
 correctAnswer must be the zero-based index of the
 correct option:
-
 0 = first option
 1 = second option
 2 = third option
 3 = fourth option
 """
-# VALIDATE GENERATED ASSESSMENT
 
+def build_explanation_prompt(
+        request: ExplanationRequest,
+):
+
+    return f"""
+You are an expert Indian teacher.
+
+Teach this topic in a very simple and interesting way.
+
+Class:
+{request.className}
+
+Subject:
+{request.subject}
+
+Chapter:
+{request.chapter}
+
+Topic:
+{request.topic}
+
+Textbook Content:
+
+{request.content}
+
+Return ONLY JSON.
+
+{{
+    "explanation":"",
+
+    "key_points":[
+        "",
+        "",
+        ""
+    ],
+
+    "example":"",
+
+    "summary":"",
+
+    "practice_questions":[
+        "",
+        "",
+        ""
+    ],
+
+    "image_required":true,
+
+    "image_prompt":""
+}}
+"""
+# GEMINI GENERATION
+
+def generate_explanation(
+        request: ExplanationRequest,
+):
+
+    prompt = build_explanation_prompt(
+        request,
+    )
+    response = client.models.generate_content(
+        model="gemini-3.5-flash",
+        contents=prompt,
+    )
+    if not response.text:
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini returned empty response.",
+        )
+
+    text = (
+        response.text
+        .replace("```json", "")
+        .replace("```", "")
+        .strip()
+    )
+    return json.loads(text)
+
+# GENERATE EXPLANATION API
+# ==========================================
+
+@app.post("/generate-explanation")
+def generate_explanation_api(
+        request: ExplanationRequest,
+):
+
+    try:
+
+        cache_key = create_cache_key(
+            request.className,
+            request.subject,
+            request.chapter,
+            request.topic,
+        )
+
+        # ----------------------------
+        # Check Firestore Cache
+        # ----------------------------
+
+        cached = get_cached_explanation(
+            cache_key,
+        )
+
+        if cached:
+
+            return {
+                "status": "cached",
+                "data": cached,
+            }
+
+        # ----------------------------
+        # Generate from Gemini
+        # ----------------------------
+
+        result = generate_explanation(
+            request,
+        )
+
+        firestore_data = {
+
+            "className": request.className,
+
+            "subject": request.subject,
+
+            "chapter": request.chapter,
+
+            "topic": request.topic,
+
+            "explanation":
+                result.get("explanation", ""),
+
+            "key_points":
+                result.get("key_points", []),
+
+            "example":
+                result.get("example", ""),
+
+            "summary":
+                result.get("summary", ""),
+
+            "practice_questions":
+                result.get(
+                    "practice_questions",
+                    [],
+                ),
+
+            "image_required":
+                result.get(
+                    "image_required",
+                    False,
+                ),
+
+            "image_prompt":
+                result.get(
+                    "image_prompt",
+                    "",
+                ),
+            # Image URL will be added later
+            "image_url": "",
+            "model":
+                "gemini-3.5-flash",
+            "createdAt":
+                firestore.SERVER_TIMESTAMP,
+
+        }
+
+        # Save Firestore
+        save_explanation(
+            cache_key,
+            firestore_data,
+        )
+        return {
+            "status": "generated",
+            "data": firestore_data,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(
+            "Explanation Generation Error:",
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate explanation.",
+        )
+
+# VALIDATE GENERATED ASSESSMENT
 def validate_assessment(
         questions: list,
         config: dict,
 ):
-
     # Must contain exactly 15 questions
     if len(questions) != 15:
         return False
-
     # Build expected counts
     expected = {}
-
     for subject, details in config.items():
         expected[subject] = {
             "beginner": details["beginner"],
@@ -661,7 +869,6 @@ def submit_assessment(
 
     # CLASSIFY PROFICIENCYt
     for subject, result in subject_results.items():
-
         total_correct = result[
             "correctAnswers"
         ]

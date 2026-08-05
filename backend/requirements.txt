@@ -1,5 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 google-genai
 firebase-admin
+pydantic
+requests

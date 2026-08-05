@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../chapters/chapters_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   String currentChapter = "Chapter 4";
   String currentTopic = "The Human Heart";
   double progress = 0.65;
-
+  String userStandard = "class10";
   // --- Animation Variables ---
   late AnimationController _robotController;
   late Animation<Offset> _robotAnimation;
@@ -62,6 +63,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       final data = userDoc.data()!;
       setState(() {
         userName = data["name"] ?? "User";
+
+        userStandard = data["standard"]
+            .toString()
+            .toLowerCase()
+            .replaceAll(" ", "");
       });
     }
   }
@@ -90,6 +96,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
   }
+
+  void openSubject(String subject) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChaptersScreen(
+          className: userStandard,
+          subject: subject,
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -149,30 +168,47 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Good Evening, $userName 👋",
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Good Evening, $userName 👋",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              "Welcome back to Learnova\nYour AI Learning Universe",
-              style: TextStyle(fontSize: 13, color: Colors.white60),
-            ),
-          ],
+
+              const SizedBox(height: 4),
+
+              const Text(
+                "Welcome back to Learnova\nYour AI Learning Universe",
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.white60,
+                ),
+              ),
+            ],
+          ),
         ),
+
         Row(
           children: [
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.notifications_none, color: Colors.white),
+              icon: const Icon(
+                Icons.notifications_none,
+                color: Colors.white,
+              ),
             ),
+
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, "/profile"),
               child: const CircleAvatar(
@@ -180,12 +216,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 backgroundColor: Colors.purpleAccent,
                 child: CircleAvatar(
                   radius: 18,
-                  backgroundImage: AssetImage('assets/profile_placeholder.png'), // Replace with actual image asset or NetworkImage
+                  backgroundImage: AssetImage(
+                    'assets/profile_placeholder.png',
+                  ),
                 ),
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -322,7 +360,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         'glowColor': Colors.orangeAccent,
       },
       {
-        'title': ' Planet Biology',
+        'title': 'Planet Biology',
         'asset': 'assets/Biology_3D.png',
         'glowColor': Colors.greenAccent,
       },
@@ -338,46 +376,67 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           final subject = subjects[index];
           final glowColor = subject['glowColor'] as Color;
 
-          return Container(
-            margin: const EdgeInsets.only(right: 14),
-            child: Column(
-              children: [
-                Container(
-                  width: 65,
-                  height: 65,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: const Color(0xff121026),
-                    border: Border.all(
-                      color: glowColor.withOpacity(0.4),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: glowColor.withOpacity(0.3),
-                        blurRadius: 12,
-                        spreadRadius: 1,
+          return GestureDetector(
+            onTap: () {
+              switch (index) {
+                case 0:
+                  openSubject("maths");
+                  break;
+
+                case 1:
+                  openSubject("physics");
+                  break;
+
+                case 2:
+                  openSubject("chemistry");
+                  break;
+
+                case 3:
+                  openSubject("biology");
+                  break;
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 14),
+              child: Column(
+                children: [
+                  Container(
+                    width: 65,
+                    height: 65,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: const Color(0xff121026),
+                      border: Border.all(
+                        color: glowColor.withOpacity(0.4),
                       ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      subject['asset'] as String,
-                      fit: BoxFit.cover,
+                      boxShadow: [
+                        BoxShadow(
+                          color: glowColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        subject['asset'] as String,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subject['title'] as String,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 6),
+                  Text(
+                    subject['title'] as String,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
