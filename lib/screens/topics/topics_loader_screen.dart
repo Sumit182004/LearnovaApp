@@ -50,8 +50,9 @@ class _TopicsLoaderScreenState
       }
 
       final data = jsonDecode(response.body);
-
-      topics = data["sections"] ?? [];
+      print(data);
+      print(data.keys);
+      topics = data["topics"] ?? [];
 
       setState(() {
         isLoading = false;
@@ -226,8 +227,8 @@ class _TopicsLoaderScreenState
                       ),
                       itemCount: topics.length,
                       itemBuilder: (context, index) {
-                        final section = topics[index];
-                        final String title =section["title"] ?? "Topic";
+                        final topic = topics[index];
+                        final String title = topic["title"] ?? "Topic";
                         return Padding(
                           padding: const EdgeInsets.only(
                             bottom: 16,
@@ -244,7 +245,7 @@ class _TopicsLoaderScreenState
                                     subject: widget.subject,
                                     chapter: widget.chapterFile.replaceAll(".json", ""),
                                     topic: title,
-                                    content: jsonEncode(section),
+                                    content: jsonEncode(topic),
                                   ),
                                 ),
                               );

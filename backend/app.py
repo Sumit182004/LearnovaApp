@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from google import genai
 import uuid
 import copy
-
+from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import auth
@@ -343,51 +343,36 @@ correct option:
 def build_explanation_prompt(
         request: ExplanationRequest,
 ):
-
     return f"""
 You are an expert Indian teacher.
-
 Teach this topic in a very simple and interesting way.
-
 Class:
 {request.className}
-
 Subject:
 {request.subject}
-
 Chapter:
 {request.chapter}
-
 Topic:
 {request.topic}
-
 Textbook Content:
-
 {request.content}
-
 Return ONLY JSON.
 
 {{
     "explanation":"",
-
     "key_points":[
         "",
         "",
         ""
     ],
-
     "example":"",
-
     "summary":"",
-
     "practice_questions":[
         "",
         "",
         ""
     ],
-
     "image_required":true,
-
     "image_prompt":""
 }}
 """
@@ -434,10 +419,7 @@ def generate_explanation_api(
             request.chapter,
             request.topic,
         )
-
-        # ----------------------------
         # Check Firestore Cache
-        # ----------------------------
 
         cached = get_cached_explanation(
             cache_key,
@@ -450,48 +432,35 @@ def generate_explanation_api(
                 "data": cached,
             }
 
-        # ----------------------------
         # Generate from Gemini
-        # ----------------------------
 
         result = generate_explanation(
             request,
         )
 
         firestore_data = {
-
             "className": request.className,
-
             "subject": request.subject,
-
             "chapter": request.chapter,
-
             "topic": request.topic,
-
             "explanation":
                 result.get("explanation", ""),
-
             "key_points":
                 result.get("key_points", []),
-
             "example":
                 result.get("example", ""),
-
             "summary":
                 result.get("summary", ""),
-
             "practice_questions":
                 result.get(
                     "practice_questions",
                     [],
                 ),
-
             "image_required":
                 result.get(
                     "image_required",
                     False,
                 ),
-
             "image_prompt":
                 result.get(
                     "image_prompt",
@@ -501,11 +470,11 @@ def generate_explanation_api(
             "image_url": "",
             "model":
                 "gemini-3.5-flash",
-            "createdAt":
-                firestore.SERVER_TIMESTAMP,
+            "createdAt": datetime.utcnow().isoformat(),
 
         }
-
+        firestore_save = firestore_data.copy()
+        firestore_save["createdAt"] = firestore.SERVER_TIMESTAMP
         # Save Firestore
         save_explanation(
             cache_key,

@@ -33,7 +33,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   Map<String, dynamic>? explanation;
 
   static const String baseUrl =
-      "https://YOUR_BACKEND_URL";
+      "https://learnovaapp-lfgn.onrender.com";
 
   @override
   void initState() {
@@ -58,6 +58,8 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
           "content": widget.content,
         }),
       );
+      print("STATUS CODE: ${response.statusCode}");
+      print("BODY: ${response.body}");
 
       if (response.statusCode != 200) {
         throw Exception("Unable to load explanation");
