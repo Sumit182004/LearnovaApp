@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_markdown/flutter_markdown.dart';
 class AiAssistantScreen extends StatefulWidget {
   const AiAssistantScreen({super.key});
 
@@ -76,11 +77,17 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           "message": userMessage,
           "standard": "class10",
           "language": "english",
-          "chat_history": messages,
+          "chat_history":
+          messages.length > 10
+              ? messages.sublist(messages.length - 10)
+              : messages,
         }),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        if (data["reply"] == null || data["reply"].toString().trim().isEmpty) {
+          throw Exception("Empty reply from server");
+        }
         setState(() {
           messages.add({
             "role": "assistant",
@@ -101,7 +108,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         messages.add({
           "role": "assistant",
           "content":
-          "Unable to connect to the server.",
+          "Unable to reach the server.\nPlease check your internet connection and try again.",
         });
       });
     }
@@ -249,25 +256,57 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
       ),
       );
     }
+
+    final displayMessages = List<Map<String, String>>.from(messages);
+
+    if (isTyping) {
+      displayMessages.add({
+        "role": "assistant",
+        "content": "Typing...",
+      });
+    }
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: messages.length,
+      itemCount: displayMessages.length,
       itemBuilder: (_, index) {
-        final message = messages[index];
+
+        final message = displayMessages[index];
+
         final isUser =
             message["role"] == "user";
+
+        if (message["content"] == "Typing...") {
+          return const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                SizedBox(width: 12),
+                CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+                SizedBox(width: 12),
+                Text(
+                  "AI is typing...",
+                  style: TextStyle(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         return Align(
           alignment: isUser
               ? Alignment.centerRight
               : Alignment.centerLeft,
           child: Container(
-            margin:
-            const EdgeInsets.only(bottom: 12),
-            padding:
-            const EdgeInsets.all(14),
-            constraints:
-            const BoxConstraints(
+            margin: const EdgeInsets.only(
+              bottom: 12,
+            ),
+            padding: const EdgeInsets.all(14),
+            constraints: const BoxConstraints(
               maxWidth: 300,
             ),
             decoration: BoxDecoration(
@@ -277,10 +316,22 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
               borderRadius:
               BorderRadius.circular(18),
             ),
-            child: Text(
-              message["content"]!,
-              style: const TextStyle(
-                color: Colors.white,
+            child: MarkdownBody(
+              data: message["content"]!,
+              selectable: true,
+              styleSheet: MarkdownStyleSheet(
+                p: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.6,
+                ),
+                strong: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                listBullet: const TextStyle(
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -373,7 +424,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
               ],
             ),
             child: IconButton(
-              onPressed: sendMessage,
+              onPressed: isTyping ? null : sendMessage,
               icon: const Icon(
                 Icons.send,
                 color: Colors.black,
