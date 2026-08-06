@@ -468,7 +468,10 @@ def register_explanation_routes(
                 }
 
             # GENERATE NEW
-            blocks = json.loads(request.content)
+            section = json.loads(request.content)
+
+            blocks = section.get("blocks", [])
+
             explanation = generate_explanation(
                 standard=request.standard,
                 subject=request.subject,

@@ -51,7 +51,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "className": widget.className,
+          "standard": widget.className,
           "subject": widget.subject,
           "chapter": widget.chapter,
           "topic": widget.topic,
