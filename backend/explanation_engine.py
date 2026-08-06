@@ -178,7 +178,8 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
         Teach Mathematics like a classroom teacher.
         Explain concept first.
         Then explain formula (if present).
-        Then explain one textbook example step-by-step.
+        If a textbook example is present,
+        explain it step-by-step.
         Mention one common mistake.
         """
 
@@ -323,7 +324,7 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
     Otherwise create ONE simple example.
     Generate this JSON:
 
-    {
+    {{
     "introduction": "",
     "concept_explanation": "",
     "key_points": [],
@@ -334,7 +335,7 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
     "reading_time": 0,
     "image_required": false,
     "image_prompt": ""
-    }
+    }}
     """
 
 def clean_gemini_response(text: str) -> str:
