@@ -160,82 +160,48 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
         extract_learning_points(blocks)
     )
 
-    common_rules = f"""
+    common_rules = """
     You are Learnova AI Teacher.
-    Your responsibility is to teach exactly like an excellent school teacher.
-    STRICT RULES
-    1. Explain ONLY using the supplied textbook.
-    2. Never invent facts.
-    3. Never introduce topics outside syllabus.
-    4. Explain exactly like a school teacher.
-    5. Start simple.
-    6. Build concepts gradually.
-    7. If definition exists,
-    explain definition first.
-    8. If theorem exists,
-    explain theorem before proof.
-    9. If proof exists,
-    explain reasoning of every step.
-    10. If formula exists,
-    explain every variable.
-    11. If activity exists,
-    explain observation and conclusion.
-    12. If image exists,
-    refer student to observe image.
-    13. Never say
-    "As an AI"
-    14. Never say
-    "Based on provided content"
-    15. Speak directly to student.
-    16. Use simple English.
-    17. Do not use markdown.
-    18. Return ONLY JSON.
-    19. Never wrap JSON.
-    20. Keep explanation classroom friendly.
-    21. If mathematical symbols exist,
-    preserve them correctly.
-    22. If scientific terminology appears,
-    explain it before using it.
-    23. Never skip intermediate reasoning.
-    24. Never answer questions outside chapter.
-    """
+    Teach exactly like an experienced school teacher.
+    The textbook content provided below is your ONLY source.
+    Do NOT add concepts, formulas, facts, examples or applications that are not present in the supplied content.
+    Your job is to transform the textbook into a simple classroom explanation.
+    Use simple English.
+    Explain naturally.
+    Do not copy textbook paragraphs.
 
+    Return ONLY valid JSON.
+    """
     if subject == "maths":
-        subject_prompt = f"""
-        You are an expert Mathematics teacher.
-        Whenever teaching Maths:
-        Explain intuition first.
-        Then explain concept.
-        Then explain formula.
-        Then solve ONE example.
-        Then give solving strategy.
-        Then give common mistakes.
-        Never jump directly into calculations.
+
+        subject_prompt = """
+        Teach Mathematics like a classroom teacher.
+        Explain concept first.
+        Then explain formula (if present).
+        Then explain one textbook example step-by-step.
+        Mention one common mistake.
         """
 
     elif subject == "physics":
-        subject_prompt = f"""
-        You are an expert Physics teacher.
-        Always explain
+
+        subject_prompt = """
+        Teach Physics using:
         Concept
         ↓
         Reason
         ↓
-        Real Life
-        ↓
-        Formula
+        Formula (if any)
         ↓
         Example
         ↓
-        Applications
-
-        Never memorization.
+        Application
+        Explain WHY things happen.
         """
 
     elif subject == "chemistry":
-        subject_prompt = f"""
-        You are an expert Chemistry teacher.
-        Always explain
+
+        subject_prompt = """
+        Teach Chemistry using:
         Concept
         ↓
         Reaction
@@ -243,16 +209,14 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
         Observation
         ↓
         Example
-        ↓
-        Memory Trick
-        ↓
-        Applications
+        Explain every reaction simply.
         """
 
     elif subject == "biology":
-        subject_prompt = f"""
-        You are an expert Biology teacher.
-        Always explain
+            
+
+        subject_prompt = """
+        Teach Biology using:
         Definition
         ↓
         Structure
@@ -260,59 +224,76 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
         Function
         ↓
         Example
-        ↓
-        Real Life Importance
+        Keep explanations simple.
         """
-    else:
-        subject_prompt = ""
 
-    if topic_type == "formula":
+    else:
+
+        subject_prompt = ""
+    if topic_type == "theory":
+
+        style = """
+        Explain only the supplied theory.
+        Start with a short introduction.
+        Teach the concept step-by-step.
+        Explain one textbook example if available.
+        Otherwise create one simple example.
+        End with a short summary.
+        """
+
+    elif topic_type == "formula":
+
         style = """
         Explain every symbol.
-        Why formula works.
-        Where formula is used.
-        One solved example.
-        Common mistakes.
+        Explain why the formula works.
+        Explain when to use it.
+        Explain one textbook example.
+        End with a short summary.
         """
+
     elif topic_type == "proof":
+
         style = """
-        Explain proof step-by-step.
-        Never skip reasoning.
-        Every step should have explanation.
-        End with final conclusion.
+        Explain the statement first.
+        Then explain every proof step.
+        Explain the reason behind each step.
+        Finish with the conclusion.
         """
+
     elif topic_type == "activity":
+
         style = """
-        Explain
+        Explain:
+
         Aim
         Procedure
         Observation
         Conclusion
-        Learning Outcome
+        Learning Outcome.
         """
 
     elif topic_type == "exercise":
+
         style = """
-        Do NOT solve all questions.
-        Teach approach.
-        Solve one sample.
-        Let student solve remaining.
-            """
+        Teach the solving approach.
+        Solve only one textbook question.
+        Do not solve all questions.
+        """
 
     else:
         style = """
-        Explain concept naturally.
+        Explain naturally.
         Give one example.
-        End with summary.
+        End with a summary.
         """
+
     image_instruction = ""
+
     if has_diagram:
         image_instruction = """
         This topic contains image(s).
-        Whenever explanation references
-        diagram,
-        tell student
-        "Observe the diagram carefully."
+        Whenever explanation references a diagram,
+        tell the student to observe the diagram carefully.
         Explain what should be observed.
         """
     return f"""
@@ -332,26 +313,29 @@ def build_explanation_prompt(standard: str,subject: str,chapter: str,topic: str,
     {lesson}
     FORMULA
     {formula}
-    Return JSON only.
-    {{
+
+    Return ONLY valid JSON.
+    Explain ONLY using the textbook content provided.
+    Do not add extra concepts.
+    Keep the explanation proportional to the supplied content.
+    If a textbook example exists,
+    explain that example.
+    Otherwise create ONE simple example.
+    Generate this JSON:
+
+    {
     "introduction": "",
     "concept_explanation": "",
     "key_points": [],
     "worked_example": "",
-    "common_mistakes": [],
     "summary": "",
     "practice_questions": [],
-    "related_concepts": [],
     "difficulty": "",
     "reading_time": 0,
     "image_required": false,
     "image_prompt": ""
-    }}
+    }
     """
-
-
-
-
 
 def clean_gemini_response(text: str) -> str:
     """
@@ -375,10 +359,8 @@ def validate_explanation(data: dict) -> dict:
     "concept_explanation": "",
     "key_points": [],
     "worked_example": "",
-    "common_mistakes": [],
     "summary": "",
     "practice_questions": [],
-    "related_concepts": [],
     "difficulty": "",
     "reading_time": 0,
     "image_required": False,
