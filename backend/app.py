@@ -12,6 +12,9 @@ from firebase_admin import firestore
 
 from explanation_engine import register_explanation_routes
 from assessment_engine import register_assessment_routes
+from assistant_engine import (
+    register_assistant_routes,
+)
 # ENVIRONMENT
 
 load_dotenv()
@@ -136,4 +139,10 @@ register_assessment_routes(
     verify_firebase_token,
     AssessmentRequest,
     AssessmentSubmission,
+)
+
+register_assistant_routes(
+    app,
+    db,
+    client,
 )
