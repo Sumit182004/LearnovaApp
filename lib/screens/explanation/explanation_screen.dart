@@ -51,7 +51,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "className": widget.className,
+          "standard": widget.className,
           "subject": widget.subject,
           "chapter": widget.chapter,
           "topic": widget.topic,
@@ -162,9 +162,22 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 const SizedBox(height: 25),
 
                 buildSection(
+                  title: "👋 Introduction",
+                  child: Text(
+                    explanation?["introduction"] ?? "",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.7,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                buildSection(
                   title: "📘 Explanation",
                   child: Text(
-                    explanation?["explanation"] ?? "",
+                    explanation?["concept_explanation"] ?? "",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -178,7 +191,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 buildSection(
                   title: "💡 Example",
                   child: Text(
-                    explanation?["example"] ?? "",
+                    explanation?["worked_example"] ?? "",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,

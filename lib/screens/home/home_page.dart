@@ -2,8 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:learnovaapp/screens/ai_assistant/ai_assistant_screen.dart';
 import '../chapters/chapters_screen.dart';
-
+import '../../profile_page.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -316,22 +317,32 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
              right: 0,
              bottom: 5,
              child: SlideTransition(
-               position: _robotAnimation, // <--- ANIMATION APPLIED HERE
-               child: Container(
-                 decoration: BoxDecoration(
-                   shape: BoxShape.circle,
-                   boxShadow: [
-                     BoxShadow(
-                       color: Colors.cyanAccent.withOpacity(0.4),
-                       blurRadius: 40,
-                       spreadRadius: -15,
+               position: _robotAnimation,
+               child: GestureDetector(
+                 onTap: () {
+                   Navigator.push(
+                     context,
+                     MaterialPageRoute(
+                       builder: (_) => const AiAssistantScreen(),
                      ),
-                   ],
-                 ),
-                 child: Image.asset(
-                   'assets/ai_mascot.png',
-                   height: 180, // Slightly taller so it still pops out of the new larger card
-                   fit: BoxFit.contain,
+                   );
+                 },
+                 child: Container(
+                   decoration: BoxDecoration(
+                     shape: BoxShape.circle,
+                     boxShadow: [
+                       BoxShadow(
+                         color: Colors.cyanAccent.withOpacity(0.4),
+                         blurRadius: 40,
+                         spreadRadius: -15,
+                       ),
+                     ],
+                   ),
+                   child: Image.asset(
+                     "assets/ai_mascot.png",
+                     height: 180,
+                     fit: BoxFit.contain,
+                   ),
                  ),
                ),
              ),
@@ -735,7 +746,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
           _navItem(3, Icons.insert_chart_outlined, "Progress"),
-          _navItem(4, Icons.person_outline, "Profile"),
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfilePage(),
+            ),
+          );
+        },
+        child: SizedBox(
+          width: 70,
+          child: _navItem(
+            4,
+            Icons.person_outline,
+            "Profile",
+          ),
+        ),
+      ),
         ],
       ),
     );

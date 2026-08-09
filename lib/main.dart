@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:flutter/services.dart';
 import 'firebase_options.dart';
 
 import 'splash_screen.dart';
@@ -13,7 +13,9 @@ import 'email_verification_page.dart';
 import 'google_profile_page.dart';
 import 'admin_dashboard.dart';
 import 'assessment_page.dart';
-Future<void> main() async {
+import 'profile_page.dart';
+import 'screens/ai_assistant/ai_assistant_screen.dart';
+Future main() async {
   WidgetsBinding widgetsBinding =
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -23,6 +25,10 @@ Future<void> main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
   );
 
   runApp(const LearnovaApp());
@@ -48,6 +54,8 @@ class LearnovaApp extends StatelessWidget {
         "/signup": (context) => const SignupPage(),
         "/home": (context) => const HomePage(),
         "/admin": (context) => const AdminDashboard(),
+        "/assistant": (context) => const AiAssistantScreen(),
+        "/profile": (context) => const ProfilePage(),
       },
 
       onGenerateRoute: (settings) {
