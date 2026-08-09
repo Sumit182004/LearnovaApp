@@ -9,7 +9,7 @@ enum AdminPage {
   syllabus,
   media,
   files,
-}
+} 
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
