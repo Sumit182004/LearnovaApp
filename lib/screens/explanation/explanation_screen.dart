@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,16 +19,13 @@ class ExplanationScreen extends StatefulWidget {
   });
 
   @override
-  State<ExplanationScreen> createState() =>
-      _ExplanationScreenState();
+  State<ExplanationScreen> createState() => _ExplanationScreenState();
 }
 
 class _ExplanationScreenState extends State<ExplanationScreen> {
   bool isLoading = true;
   bool hasError = false;
-
   String errorMessage = "";
-
   Map<String, dynamic>? explanation;
 
   static const String baseUrl =
@@ -44,9 +40,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   Future<void> loadExplanation() async {
     try {
       final response = await http.post(
-        Uri.parse(
-          "$baseUrl/generate-explanation",
-        ),
+        Uri.parse("$baseUrl/generate-explanation"),
         headers: {
           "Content-Type": "application/json",
         },
@@ -58,6 +52,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
           "content": widget.content,
         }),
       );
+
       print("STATUS CODE: ${response.statusCode}");
       print("BODY: ${response.body}");
 
@@ -65,11 +60,10 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
         throw Exception("Unable to load explanation");
       }
 
-      final responseData =
-      jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
 
-      explanation =
-      responseData["data"];
+      explanation = responseData["data"];
+
       setState(() {
         isLoading = false;
       });
@@ -80,6 +74,53 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
         isLoading = false;
       });
     }
+  }
+
+  String get subject {
+    final value = widget.subject.toLowerCase().trim();
+
+    if (value == "math" ||
+        value == "mathematics" ||
+        value == "maths") {
+      return "maths";
+    }
+
+    if (value == "phy" || value == "physics") {
+      return "physics";
+    }
+
+    if (value == "chem" || value == "chemistry") {
+      return "chemistry";
+    }
+
+    if (value == "bio" || value == "biology") {
+      return "biology";
+    }
+
+    return value;
+  }
+
+  bool hasText(dynamic value) {
+    return value != null &&
+        value.toString().trim().isNotEmpty;
+  }
+
+  bool hasList(dynamic value) {
+    return value is List && value.isNotEmpty;
+  }
+
+  bool isExercise() {
+    final content = widget.content.toLowerCase();
+
+    return content.contains('"type":"exercise"') ||
+        content.contains('"type": "exercise"');
+  }
+
+  bool isIntroduction() {
+    final content = widget.content.toLowerCase();
+
+    return content.contains('"type":"introduction"') ||
+        content.contains('"type": "introduction"');
   }
 
   @override
@@ -115,7 +156,6 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xff0B0E1B),
-
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
@@ -127,13 +167,11 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
             ],
           ),
         ),
-
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(18),
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
@@ -152,8 +190,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
-                          fontWeight:
-                          FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -161,80 +198,27 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                buildSection(
-                  title: "👋 Introduction",
-                  child: Text(
-                    explanation?["introduction"] ?? "",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      height: 1.7,
-                    ),
-                  ),
-                ),
+                if (isExercise())
+                  buildExerciseContent()
+                else if (isIntroduction())
+                  buildIntroductionContent()
+                else
+                  buildNormalContent(),
 
-                const SizedBox(height: 20),
-                buildSection(
-                  title: "📘 Explanation",
-                  child: Text(
-                    explanation?["concept_explanation"] ?? "",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      height: 1.7,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                buildKeyPoints(),
-                const SizedBox(height: 20),
-                buildSection(
-                  title: "💡 Example",
-                  child: Text(
-                    explanation?["worked_example"] ?? "",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      height: 1.7,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                buildImage(),
-                const SizedBox(height: 20),
-                buildSection(
-                  title: "📝 Summary",
-                  child: Text(
-                    explanation?["summary"] ?? "",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      height: 1.7,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                buildPracticeQuestions(),
                 const SizedBox(height: 35),
+
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    style:
-                    ElevatedButton.styleFrom(
-                      backgroundColor:
-                      Colors.purpleAccent,
-                      shape:
-                      RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(
-                            16),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purpleAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     onPressed: () {
-
-                      /// Assessment
-
+                      // Assessment
                     },
                     child: const Text(
                       "Take Assessment",
@@ -245,6 +229,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 30),
               ],
             ),
@@ -253,6 +238,255 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
       ),
     );
   }
+
+  Widget buildExerciseContent() {
+    if (subject == "maths") {
+      return buildIfHasText(
+        "🧮 Solution",
+        explanation?["worked_example"],
+      );
+    }
+
+    if (subject == "physics") {
+      return buildIfHasText(
+        "⚡ Solution",
+        explanation?["example_or_application"],
+      );
+    }
+
+    if (subject == "chemistry") {
+      return buildIfHasText(
+        "🧪 Solution",
+        explanation?["example"],
+      );
+    }
+
+    if (subject == "biology") {
+      return buildIfHasText(
+        "🧬 Solution",
+        explanation?["example"],
+      );
+    }
+
+    return const SizedBox();
+  }
+
+  Widget buildIntroductionContent() {
+    return buildIfHasText(
+      "👋 Introduction",
+      explanation?["introduction"],
+    );
+  }
+
+  Widget buildNormalContent() {
+    final List<Widget> sections = [];
+
+    if (hasText(explanation?["introduction"])) {
+      sections.add(
+        buildSection(
+          title: "👋 Introduction",
+          child: buildText(explanation?["introduction"]),
+        ),
+      );
+    }
+
+    if (hasText(explanation?["concept_explanation"])) {
+      sections.add(
+        buildSection(
+          title: "📘 Explanation",
+          child: buildText(
+            explanation?["concept_explanation"],
+          ),
+        ),
+      );
+    }
+
+    if (subject == "physics") {
+      if (hasText(explanation?["formula"])) {
+        sections.add(
+          buildSection(
+            title: "📐 Formula",
+            child: buildText(
+              explanation?["formula"],
+            ),
+          ),
+        );
+      }
+
+      if (hasText(explanation?["observation"])) {
+        sections.add(
+          buildSection(
+            title: "🔎 Observation",
+            child: buildText(
+              explanation?["observation"],
+            ),
+          ),
+        );
+      }
+
+      if (hasText(
+        explanation?["example_or_application"],
+      )) {
+        sections.add(
+          buildSection(
+            title: "💡 Example / Application",
+            child: buildText(
+              explanation?["example_or_application"],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (subject == "chemistry") {
+      if (hasList(explanation?["reactions"])) {
+        sections.add(
+          buildListSection(
+            title: "🧪 Reactions",
+            items: explanation?["reactions"],
+          ),
+        );
+      }
+
+      if (hasList(explanation?["observations"])) {
+        sections.add(
+          buildListSection(
+            title: "🔎 Observations",
+            items: explanation?["observations"],
+          ),
+        );
+      }
+
+      if (hasText(explanation?["example"])) {
+        sections.add(
+          buildSection(
+            title: "💡 Example",
+            child: buildText(
+              explanation?["example"],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (subject == "biology") {
+      if (hasText(
+        explanation?["structure_or_process"],
+      )) {
+        sections.add(
+          buildSection(
+            title: "🧬 Structure / Process",
+            child: buildText(
+              explanation?["structure_or_process"],
+            ),
+          ),
+        );
+      }
+
+      if (hasText(
+        explanation?["functions_or_explanation"],
+      )) {
+        sections.add(
+          buildSection(
+            title: "⚙️ Functions / Explanation",
+            child: buildText(
+              explanation?["functions_or_explanation"],
+            ),
+          ),
+        );
+      }
+
+      if (hasText(explanation?["example"])) {
+        sections.add(
+          buildSection(
+            title: "💡 Example",
+            child: buildText(
+              explanation?["example"],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (subject == "maths") {
+      if (hasText(explanation?["worked_example"])) {
+        sections.add(
+          buildSection(
+            title: "💡 Example",
+            child: buildText(
+              explanation?["worked_example"],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (hasList(explanation?["key_points"])) {
+      sections.add(
+        buildKeyPoints(),
+      );
+    }
+
+    if (hasText(explanation?["summary"])) {
+      sections.add(
+        buildSection(
+          title: "📝 Summary",
+          child: buildText(
+            explanation?["summary"],
+          ),
+        ),
+      );
+    }
+
+    if (hasList(
+      explanation?["practice_questions"],
+    )) {
+      sections.add(
+        buildPracticeQuestions(),
+      );
+    }
+
+    if (hasText(explanation?["image_url"])) {
+      sections.add(buildImage());
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < sections.length; i++) ...[
+          sections[i],
+          if (i < sections.length - 1)
+            const SizedBox(height: 20),
+        ],
+      ],
+    );
+  }
+
+  Widget buildIfHasText(
+      String title,
+      dynamic value,
+      ) {
+    if (!hasText(value)) {
+      return const SizedBox();
+    }
+
+    return buildSection(
+      title: title,
+      child: buildText(value),
+    );
+  }
+
+  Widget buildText(dynamic value) {
+    return Text(
+      value.toString().replaceAll("**", ""),
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        height: 1.7,
+      ),
+    );
+  }
+
   Widget buildSection({
     required String title,
     required Widget child,
@@ -288,6 +522,11 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   Widget buildKeyPoints() {
     final List<dynamic> points =
         explanation?["key_points"] ?? [];
+
+    if (points.isEmpty) {
+      return const SizedBox();
+    }
+
     return buildSection(
       title: "⭐ Key Points",
       child: Column(
@@ -310,7 +549,9 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      points[index].toString(),
+                      points[index]
+                          .toString()
+                          .replaceAll("**", ""),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -326,17 +567,55 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
       ),
     );
   }
+
+  Widget buildListSection({
+    required String title,
+    required List<dynamic> items,
+  }) {
+    if (items.isEmpty) {
+      return const SizedBox();
+    }
+
+    return buildSection(
+      title: title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(
+          items.length,
+              (index) {
+            return Padding(
+              padding: const EdgeInsets.only(
+                bottom: 12,
+              ),
+              child: Text(
+                "${index + 1}. ${items[index]}"
+                    .toString()
+                    .replaceAll("**", ""),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  height: 1.6,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget buildImage() {
     final image =
         explanation?["image_url"] ?? "";
+
     if (image.toString().isEmpty) {
       return const SizedBox();
     }
+
     return buildSection(
       title: "🖼 Diagram",
       child: ClipRRect(
-        borderRadius:
-        BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15),
         child: Image.network(
           image,
           fit: BoxFit.cover,
@@ -344,9 +623,15 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
       ),
     );
   }
+
   Widget buildPracticeQuestions() {
     final List<dynamic> questions =
         explanation?["practice_questions"] ?? [];
+
+    if (questions.isEmpty) {
+      return const SizedBox();
+    }
+
     return buildSection(
       title: "🎯 Practice Questions",
       child: Column(
@@ -371,7 +656,9 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      questions[index].toString(),
+                      questions[index]
+                          .toString()
+                          .replaceAll("**", ""),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,

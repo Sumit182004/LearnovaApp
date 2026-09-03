@@ -30,23 +30,42 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
 
   Future<void> loadChapters() async {
     try {
+      // IMPORTANT:
+      // Chapters are stored separately from practicals.
+      //
+      // syllabus/
+      //   class10/
+      //     maths/
+      //       chapters/
+      //     physics/
+      //       chapters/
+      //     chemistry/
+      //       chapters/
+      //     biology/
+      //       chapters/
+
       final ref = FirebaseStorage.instance.ref(
-        "syllabus/${widget.className}/${widget.subject}",
+        "syllabus/${widget.className}/${widget.subject}/chapters",
       );
 
       final result = await ref.listAll();
 
-      chapters = result.items
-          .where((e) => e.name.endsWith(".json"))
+      final loadedChapters = result.items
+          .where((e) => e.name.toLowerCase().endsWith(".json"))
           .map((e) => e.name)
           .toList();
 
-      chapters.sort();
+      loadedChapters.sort();
+
+      if (!mounted) return;
 
       setState(() {
+        chapters = loadedChapters;
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         error = e.toString();
         isLoading = false;
@@ -59,13 +78,16 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
         .replaceAll(".json", "")
         .replaceAll("_", " ")
         .split(" ")
-        .map((e) =>
-    e.isEmpty ? e : e[0].toUpperCase() + e.substring(1))
+        .map(
+          (e) => e.isEmpty
+          ? e
+          : e[0].toUpperCase() + e.substring(1),
+    )
         .join(" ");
   }
 
   IconData getSubjectIcon() {
-    switch (widget.subject) {
+    switch (widget.subject.toLowerCase()) {
       case "maths":
         return Icons.calculate;
 
@@ -84,7 +106,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
   }
 
   Color getGlowColor() {
-    switch (widget.subject) {
+    switch (widget.subject.toLowerCase()) {
       case "maths":
         return Colors.lightBlueAccent;
 
@@ -125,10 +147,15 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
           child: Column(
             children: [
 
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+              // ============================================================
+              // HEADER
+              // ============================================================
 
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 15,
+                ),
                 child: Row(
                   children: [
 
@@ -163,9 +190,14 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                 ),
               ),
 
+              // ============================================================
+              // CHAPTER LIST
+              // ============================================================
+
               Expanded(
                 child: Builder(
                   builder: (_) {
+
                     if (isLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
@@ -202,7 +234,9 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                     }
 
                     return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                      ),
 
                       itemCount: chapters.length,
 
@@ -210,30 +244,32 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                         final chapter = chapters[index];
 
                         return Padding(
-                          padding:
-                          const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.only(
+                            bottom: 16,
+                          ),
 
                           child: InkWell(
-                            borderRadius:
-                            BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(20),
+
+                            // ==================================================
+                            // CHAPTER → TOPICS
+                            // ==================================================
 
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      TopicsLoaderScreen(
-                                        className: widget.className,
-                                        subject: widget.subject,
-                                        chapterFile: chapter,
-                                      ),
+                                  builder: (_) => TopicsLoaderScreen(
+                                    className: widget.className,
+                                    subject: widget.subject,
+                                    chapterFile: chapter,
+                                  ),
                                 ),
                               );
                             },
 
                             child: Container(
-                              padding:
-                              const EdgeInsets.all(18),
+                              padding: const EdgeInsets.all(18),
 
                               decoration: BoxDecoration(
                                 color: const Color(0xff1A173B)
@@ -243,14 +279,13 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                                 BorderRadius.circular(20),
 
                                 border: Border.all(
-                                  color: Colors.white
-                                      .withOpacity(0.08),
+                                  color:
+                                  Colors.white.withOpacity(0.08),
                                 ),
 
                                 boxShadow: [
                                   BoxShadow(
-                                    color:
-                                    glow.withOpacity(0.18),
+                                    color: glow.withOpacity(0.18),
                                     blurRadius: 15,
                                     spreadRadius: 1,
                                   ),
@@ -266,8 +301,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
 
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color:
-                                      glow.withOpacity(.15),
+                                      color: glow.withOpacity(.15),
                                     ),
 
                                     child: Icon(
@@ -282,20 +316,17 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                                     child: Text(
                                       formatChapter(chapter),
 
-                                      style:
-                                      const TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 17,
-                                        fontWeight:
-                                        FontWeight.bold,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
 
                                   const Icon(
                                     Icons.arrow_forward_ios,
-                                    color:
-                                    Colors.purpleAccent,
+                                    color: Colors.purpleAccent,
                                     size: 18,
                                   ),
                                 ],
