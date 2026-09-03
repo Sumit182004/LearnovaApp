@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:learnovaapp/screens/explanation/explanation_screen.dart';
+
+// YOUR EXISTING EXPLANATION SCREEN
+import '../explanation/explanation_screen.dart';
 
 class TopicsLoaderScreen extends StatefulWidget {
   final String className;
@@ -22,12 +24,11 @@ class TopicsLoaderScreen extends StatefulWidget {
       _TopicsLoaderScreenState();
 }
 
-class _TopicsLoaderScreenState
-    extends State<TopicsLoaderScreen> {
-
+class _TopicsLoaderScreenState extends State<TopicsLoaderScreen> {
   bool isLoading = true;
   String error = "";
-  List topics = [];
+
+  List<dynamic> topics = [];
 
   @override
   void initState() {
@@ -35,29 +36,78 @@ class _TopicsLoaderScreenState
     loadTopics();
   }
 
+
   Future<void> loadTopics() async {
     try {
+
       final ref = FirebaseStorage.instance.ref(
-        "syllabus/${widget.className}/${widget.subject}/${widget.chapterFile}",
+        "syllabus/"
+            "${widget.className}/"
+            "${widget.subject.toLowerCase()}/"
+            "chapters/"
+            "${widget.chapterFile}",
       );
 
       final url = await ref.getDownloadURL();
 
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+      );
 
       if (response.statusCode != 200) {
-        throw Exception("Unable to load JSON");
+        throw Exception(
+          "Failed to load chapter. Status: ${response.statusCode}",
+        );
       }
 
-      final data = jsonDecode(response.body);
-      print(data);
-      print(data.keys);
-      topics = data["topics"] ?? [];
+      final Map<String, dynamic> data =
+      jsonDecode(response.body) as Map<String, dynamic>;
+
+      debugPrint("========== CHAPTER JSON ==========");
+      debugPrint(data.toString());
+      debugPrint("==================================");
+
+      dynamic loadedTopics;
+
+      if (data["topics"] != null) {
+        loadedTopics = data["topics"];
+
+        debugPrint(
+          "Using JSON key: topics",
+        );
+      } else if (data["sections"] != null) {
+        loadedTopics = data["sections"];
+
+        debugPrint(
+          "Using JSON key: sections",
+        );
+      } else {
+        loadedTopics = [];
+
+        debugPrint(
+          "No topics or sections found in JSON",
+        );
+      }
+
+      if (loadedTopics is! List) {
+        throw Exception(
+          "Invalid JSON format: topics/sections must be a list.",
+        );
+      }
+
+      if (!mounted) return;
 
       setState(() {
+        topics = loadedTopics;
         isLoading = false;
       });
     } catch (e) {
+      debugPrint(
+        "ERROR LOADING TOPICS: $e",
+      );
+
+      if (!mounted) return;
+
       setState(() {
         error = e.toString();
         isLoading = false;
@@ -65,21 +115,170 @@ class _TopicsLoaderScreenState
     }
   }
 
-  String get chapterTitle {
-    return widget.chapterFile
-        .replaceAll(".json", "")
-        .replaceAll("_", " ")
-        .split(" ")
-        .map(
-          (e) => e.isEmpty
-          ? e
-          : e[0].toUpperCase() + e.substring(1),
-    )
-        .join(" ");
+  // GET TOPIC TITLE
+
+  String getTopicTitle(dynamic topic) {
+    if (topic is! Map) {
+      return topic.toString();
+    }
+
+    // Maths style
+    if (topic["title"] != null) {
+      return topic["title"].toString();
+    }
+
+    // Other possible naming
+    if (topic["name"] != null) {
+      return topic["name"].toString();
+    }
+
+    if (topic["topic"] != null) {
+      return topic["topic"].toString();
+    }
+
+    return "Topic";
   }
 
+  // GET TOPIC ID
+
+  String getTopicId(
+      dynamic topic,
+      int index,
+      ) {
+    if (topic is Map) {
+      if (topic["id"] != null) {
+        return topic["id"].toString();
+      }
+    }
+
+    return "${index + 1}";
+  }
+
+  String getTopicContent(dynamic topic) {
+    if (topic is! Map) {
+      return jsonEncode({
+        "blocks": [
+          {
+            "type": "theory",
+            "text": topic.toString(),
+          }
+        ]
+      });
+    }
+
+    // KEEP THE ORIGINAL BLOCK STRUCTURE
+
+    final rawBlocks = topic["blocks"];
+
+    if (rawBlocks is List) {
+      return jsonEncode({
+        "blocks": rawBlocks,
+      });
+    }
+
+    // ============================================================
+    // IF CONTENT IS ALREADY PRESENT
+    // ============================================================
+
+    if (topic["content"] != null) {
+      final content = topic["content"];
+
+      // If content is already a JSON string, keep it.
+      if (content is String) {
+        try {
+          jsonDecode(content);
+          return content;
+        } catch (_) {
+          // Plain text content
+          return jsonEncode({
+            "blocks": [
+              {
+                "type": "theory",
+                "text": content,
+              }
+            ]
+          });
+        }
+      }
+
+      // If content is already a Map/List
+      return jsonEncode({
+        "blocks": [
+          {
+            "type": "theory",
+            "text": content.toString(),
+          }
+        ]
+      });
+    }
+
+    return jsonEncode({
+      "blocks": [
+        {
+          "type": "theory",
+          "text": topic.toString(),
+        }
+      ]
+    });
+  }
+
+  // OPEN EXISTING EXPLANATION SCREEN
+
+
+  void openExplanation(
+      dynamic topic,
+      int index,
+      ) {
+    if (topic is! Map) return;
+
+    final String topicTitle = getTopicTitle(
+      topic,
+    );
+
+    final String topicId = getTopicId(
+      topic,
+      index,
+    );
+    final String content = getTopicContent(
+      topic,
+    );
+    debugPrint(
+      "======================================",
+    );
+    debugPrint(
+      "OPENING EXPLANATION",
+    );
+    debugPrint(
+      "Topic ID: $topicId",
+    );
+    debugPrint(
+      "Topic: $topicTitle",
+    );
+    debugPrint(
+      "Content length: ${content.length}",
+    );
+    debugPrint(
+      "======================================",
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExplanationScreen(
+          className: widget.className,
+          subject: widget.subject,
+          chapter: widget.chapterFile,
+          topic: topicTitle,
+          content: content,
+        ),
+      ),
+    );
+  }
+
+  // SUBJECT ICON
+
   IconData getSubjectIcon() {
-    switch (widget.subject) {
+    switch (widget.subject.toLowerCase()) {
       case "maths":
         return Icons.calculate;
 
@@ -97,8 +296,9 @@ class _TopicsLoaderScreenState
     }
   }
 
+  // GLOW COLOR
   Color getGlowColor() {
-    switch (widget.subject) {
+    switch (widget.subject.toLowerCase()) {
       case "maths":
         return Colors.lightBlueAccent;
 
@@ -116,9 +316,10 @@ class _TopicsLoaderScreenState
     }
   }
 
+  // BUILD
+
   @override
   Widget build(BuildContext context) {
-
     final glow = getGlowColor();
 
     return Scaffold(
@@ -140,6 +341,8 @@ class _TopicsLoaderScreenState
           child: Column(
             children: [
 
+              // HEADER
+
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -153,13 +356,14 @@ class _TopicsLoaderScreenState
                       onPressed: () {
                         Navigator.pop(context);
                       },
+
                       icon: const Icon(
                         Icons.arrow_back_ios_new,
                         color: Colors.white,
                       ),
                     ),
 
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
 
                     Icon(
                       getSubjectIcon(),
@@ -170,22 +374,29 @@ class _TopicsLoaderScreenState
 
                     Expanded(
                       child: Text(
-                        chapterTitle,
+                        widget.chapterFile
+                            .replaceAll(".json", "")
+                            .replaceAll("_", " ")
+                            .toUpperCase(),
+
                         style: const TextStyle(
                           color: Colors.white,
+                          fontSize: 21,
                           fontWeight: FontWeight.bold,
-                          fontSize: 22,
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
 
+              // CONTENT
+
               Expanded(
                 child: Builder(
                   builder: (_) {
+
+                    // LOADING
 
                     if (isLoading) {
                       return const Center(
@@ -195,24 +406,34 @@ class _TopicsLoaderScreenState
                       );
                     }
 
+                    // ERROR
+
                     if (error.isNotEmpty) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(20),
+
                           child: Text(
                             error,
+
                             style: const TextStyle(
                               color: Colors.white,
+                              fontSize: 15,
                             ),
+
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       );
                     }
 
+                    // NO TOPICS
+
                     if (topics.isEmpty) {
                       return const Center(
                         child: Text(
                           "No Topics Found",
+
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 18,
@@ -221,48 +442,69 @@ class _TopicsLoaderScreenState
                       );
                     }
 
+                    // TOPICS
+
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
+                        vertical: 10,
                       ),
+
                       itemCount: topics.length,
-                      itemBuilder: (context, index) {
+
+                      itemBuilder: (_, index) {
                         final topic = topics[index];
-                        final String title = topic["title"] ?? "Topic";
+
+                        final title = getTopicTitle(
+                          topic,
+                        );
+
+                        final id = getTopicId(
+                          topic,
+                          index,
+                        );
+
                         return Padding(
                           padding: const EdgeInsets.only(
                             bottom: 16,
                           ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
 
+                          child: InkWell(
+                            borderRadius:
+                            BorderRadius.circular(20),
+
+                            // TOPIC CLICK
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ExplanationScreen(
-                                    className: widget.className,
-                                    subject: widget.subject,
-                                    chapter: widget.chapterFile.replaceAll(".json", ""),
-                                    topic: title,
-                                    content: jsonEncode(topic),
-                                  ),
-                                ),
+                              openExplanation(
+                                topic,
+                                index,
                               );
                             },
 
                             child: Container(
-                              padding: const EdgeInsets.all(18),
+                              padding:
+                              const EdgeInsets.all(18),
+
                               decoration: BoxDecoration(
-                                color: const Color(0xff1A173B).withOpacity(.6),
-                                borderRadius: BorderRadius.circular(20),
+                                color: const Color(
+                                  0xff1A173B,
+                                ).withOpacity(0.6),
+
+                                borderRadius:
+                                BorderRadius.circular(20),
+
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(.08),
+                                  color: Colors.white
+                                      .withOpacity(0.08),
                                 ),
+
                                 boxShadow: [
                                   BoxShadow(
-                                    color: glow.withOpacity(.18),
+                                    color: glow
+                                        .withOpacity(0.18),
+
                                     blurRadius: 15,
+
                                     spreadRadius: 1,
                                   ),
                                 ],
@@ -271,35 +513,75 @@ class _TopicsLoaderScreenState
                               child: Row(
                                 children: [
 
+                                  // ICON
+
                                   Container(
                                     width: 48,
                                     height: 48,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: glow.withOpacity(.15),
+
+                                    decoration:
+                                    BoxDecoration(
+                                      shape:
+                                      BoxShape.circle,
+
+                                      color: glow
+                                          .withOpacity(.15),
                                     ),
+
                                     child: Icon(
-                                      Icons.school,
+                                      getSubjectIcon(),
                                       color: glow,
                                     ),
                                   ),
 
-                                  const SizedBox(width: 16),
+                                  const SizedBox(
+                                    width: 16,
+                                  ),
+
+                                  // TOPIC NAME
 
                                   Expanded(
-                                    child: Text(
-                                      title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+
+                                      children: [
+
+                                        Text(
+                                          "Topic $id",
+
+                                          style: TextStyle(
+                                            color: glow,
+                                            fontSize: 12,
+                                            fontWeight:
+                                            FontWeight.w600,
+                                          ),
+                                        ),
+
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+
+                                        Text(
+                                          title,
+
+                                          style:
+                                          const TextStyle(
+                                            color:
+                                            Colors.white,
+                                            fontSize: 17,
+                                            fontWeight:
+                                            FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
 
                                   const Icon(
                                     Icons.arrow_forward_ios,
-                                    color: Colors.purpleAccent,
+                                    color:
+                                    Colors.purpleAccent,
                                     size: 18,
                                   ),
                                 ],
@@ -312,7 +594,6 @@ class _TopicsLoaderScreenState
                   },
                 ),
               ),
-
             ],
           ),
         ),

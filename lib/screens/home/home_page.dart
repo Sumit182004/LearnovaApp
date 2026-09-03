@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:learnovaapp/screens/ai_assistant/ai_assistant_screen.dart';
+import 'package:learnovaapp/screens/dream_lab/Dream_lab_Screen.dart';
 import '../chapters/chapters_screen.dart';
 import '../../profile_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -571,11 +573,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   // --- Quick Access Tools ---
   Widget _buildQuickAccess() {
     final tools = [
-      {'title': 'Voice Your\nDoubt', 'icon': Icons.mic_none},
-      {'title': 'Teach Me\nBack', 'icon': Icons.record_voice_over_outlined},
-      {'title': 'Consequence\nLab', 'icon': Icons.science_outlined},
-      {'title': 'Dream Lab\n(Simulations)', 'icon': Icons.blur_on},
-      {'title': 'MCQ\nPractice', 'icon': Icons.fact_check_outlined},
+      {
+        'title': 'Voice Your\nDoubt',
+        'icon': Icons.mic_none,
+      },
+      {
+        'title': 'Teach Me\nBack',
+        'icon': Icons.record_voice_over_outlined,
+      },
+      {
+        'title': 'Consequence\nLab',
+        'icon': Icons.science_outlined,
+      },
+      {
+        'title': 'Dream Lab\n(Simulations)',
+        'icon': Icons.blur_on,
+      },
+      {
+        'title': 'MCQ\nPractice',
+        'icon': Icons.fact_check_outlined,
+      },
     ];
 
     return SizedBox(
@@ -585,22 +602,44 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         itemCount: tools.length,
         itemBuilder: (context, index) {
           final tool = tools[index];
-          return Container(
-            width: 80,
-            margin: const EdgeInsets.only(right: 10),
-            padding: const EdgeInsets.all(8),
-            decoration: _glassDecoration(),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(tool['icon'] as IconData, color: Colors.cyanAccent, size: 22),
-                const SizedBox(height: 6),
-                Text(
-                  tool['title'] as String,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 9),
-                ),
-              ],
+
+          return GestureDetector(
+            onTap: () {
+              if (index == 3) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DreamLabScreen(),
+                  ),
+                );
+              }
+            },
+            child: Container(
+              width: 80,
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.all(8),
+              decoration: _glassDecoration(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    tool['icon'] as IconData,
+                    color: Colors.cyanAccent,
+                    size: 22,
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    tool['title'] as String,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 enum AdminPage {
   dashboard,
   syllabus,
   media,
   files,
+}
+
+enum SyllabusType {
+  chapters,
+  practicals,
 }
 
 class AdminDashboard extends StatefulWidget {
@@ -26,11 +32,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String selectedClass = "class10";
   String selectedSubject = "Maths";
 
+  // ============================================================
+  // SYLLABUS TYPE
+  // ============================================================
+
+  SyllabusType selectedSyllabusType = SyllabusType.chapters;
+
+  // ============================================================
+  // UPLOAD STATE
+  // ============================================================
+
   bool isUploading = false;
   double uploadProgress = 0;
 
+  // ============================================================
+  // FILE STATE
+  // ============================================================
+
   List<Reference> uploadedFiles = [];
   bool isLoadingFiles = false;
+
+  // ============================================================
+  // SUBJECTS
+  // ============================================================
 
   final Map<String, List<String>> subjectsByClass = {
     "class10": [
@@ -47,12 +71,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ],
   };
 
+  // ============================================================
+  // CURRENT SUBJECTS
+  // ============================================================
+
   List<String> get currentSubjects =>
       subjectsByClass[selectedClass] ?? [];
+
+  // ============================================================
+  // STORAGE CLASS
+  // ============================================================
 
   String get storageClass {
     return selectedClass.toLowerCase().replaceAll(" ", "");
   }
+
+  // ============================================================
+  // STORAGE SUBJECT
+  // ============================================================
 
   String get storageSubject {
     switch (selectedSubject.toLowerCase()) {
@@ -73,6 +109,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  // ============================================================
+  // SYLLABUS TYPE FOLDER
+  // ============================================================
+
+  String get syllabusTypeFolder {
+    return selectedSyllabusType == SyllabusType.chapters
+        ? "chapters"
+        : "practicals";
+  }
+
+  // ============================================================
+  // CHANGE CLASS
+  // ============================================================
+
   void changeClass(String? value) {
     if (value == null) return;
 
@@ -87,11 +137,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
+  // ============================================================
+  // CHANGE SUBJECT
+  // ============================================================
+
   void changeSubject(String? value) {
     if (value == null) return;
 
     setState(() {
       selectedSubject = value;
+      uploadedFiles.clear();
+    });
+  }
+
+  // ============================================================
+  // CHANGE SYLLABUS TYPE
+  // ============================================================
+
+  void changeSyllabusType(SyllabusType type) {
+    setState(() {
+      selectedSyllabusType = type;
       uploadedFiles.clear();
     });
   }
@@ -116,7 +181,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
 
     final File file = File(filePath);
-    String fileName = result.files.single.name
+
+    final String fileName = result.files.single.name
         .replaceAll(" ", "_")
         .replaceAll("(1)", "")
         .replaceAll("(2)", "")
@@ -128,8 +194,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
 
     try {
+      // ========================================================
+      // NEW STORAGE STRUCTURE
+      //
+      // syllabus/
+      //   class10/
+      //     chemistry/
+      //       chapters/
+      //       practicals/
+      // ========================================================
+
       final Reference reference = storage.ref().child(
-        "syllabus/$storageClass/$storageSubject/$fileName",
+        "syllabus/"
+            "$storageClass/"
+            "$storageSubject/"
+            "$syllabusTypeFolder/"
+            "$fileName",
       );
 
       final UploadTask uploadTask = reference.putFile(
@@ -161,7 +241,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       });
 
       showMessage(
-        "JSON uploaded successfully.",
+        selectedSyllabusType == SyllabusType.chapters
+            ? "Chapter JSON uploaded successfully."
+            : "Practical JSON uploaded successfully.",
         color: Colors.green,
       );
     } on FirebaseException catch (e) {
@@ -282,7 +364,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     try {
       final Reference reference = storage.ref().child(
-        "syllabus/$storageClass/$storageSubject",
+        "syllabus/"
+            "$storageClass/"
+            "$storageSubject/"
+            "$syllabusTypeFolder",
       );
 
       final ListResult result = await reference.listAll();
@@ -506,7 +591,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             icon: Icons.menu_book,
             title: "Manage Syllabus",
             description:
-            "Upload chapter and syllabus JSON files.",
+            "Upload chapter and practical JSON files.",
             onTap: () {
               setState(() {
                 currentPage = AdminPage.syllabus;
@@ -546,6 +631,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  // ============================================================
+  // DASHBOARD CARD
+  // ============================================================
+
   Widget dashboardCard({
     required IconData icon,
     required String title,
@@ -556,6 +645,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       elevation: 3,
       child: ListTile(
         contentPadding: const EdgeInsets.all(20),
+
         leading: CircleAvatar(
           radius: 28,
           child: Icon(
@@ -563,6 +653,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             size: 28,
           ),
         ),
+
         title: Text(
           title,
           style: const TextStyle(
@@ -570,14 +661,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
             fontWeight: FontWeight.bold,
           ),
         ),
+
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(description),
         ),
+
         trailing: const Icon(
           Icons.arrow_forward_ios,
           size: 18,
         ),
+
         onTap: onTap,
       ),
     );
@@ -601,9 +695,90 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
           const SizedBox(height: 30),
 
+          // CLASS + SUBJECT
           selectors(),
 
           const SizedBox(height: 30),
+
+          // ====================================================
+          // CHAPTER / PRACTICAL SELECTION
+          // ====================================================
+
+          Row(
+            children: [
+              Expanded(
+                child: _syllabusTypeButton(
+                  icon: Icons.menu_book,
+                  title: "Chapters",
+                  type: SyllabusType.chapters,
+                ),
+              ),
+
+              const SizedBox(width: 15),
+
+              Expanded(
+                child: _syllabusTypeButton(
+                  icon: Icons.science,
+                  title: "Practicals",
+                  type: SyllabusType.practicals,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 25),
+
+          // ====================================================
+          // SELECTED TYPE
+          // ====================================================
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  selectedSyllabusType ==
+                      SyllabusType.chapters
+                      ? Icons.menu_book
+                      : Icons.science,
+                  size: 28,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary,
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Text(
+                    selectedSyllabusType ==
+                        SyllabusType.chapters
+                        ? "Chapter JSON"
+                        : "Practical JSON",
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // ====================================================
+          // UPLOAD BUTTON
+          // ====================================================
 
           SizedBox(
             width: double.infinity,
@@ -614,14 +789,95 @@ class _AdminDashboardState extends State<AdminDashboard> {
               icon: const Icon(
                 Icons.upload_file,
               ),
-              label: const Text(
-                "Upload JSON File",
+              label: Text(
+                selectedSyllabusType ==
+                    SyllabusType.chapters
+                    ? "Upload Chapter JSON"
+                    : "Upload Practical JSON",
               ),
             ),
           ),
 
           uploadProgressWidget(),
         ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // CHAPTER / PRACTICAL BUTTON
+  // ============================================================
+
+  Widget _syllabusTypeButton({
+    required IconData icon,
+    required String title,
+    required SyllabusType type,
+  }) {
+    final bool isSelected =
+        selectedSyllabusType == type;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+
+      onTap: () {
+        changeSyllabusType(type);
+      },
+
+      child: Container(
+        height: 110,
+
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context)
+              .colorScheme
+              .primary
+              .withOpacity(0.10)
+              : null,
+
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context)
+                .colorScheme
+                .primary
+                : Colors.grey.shade400,
+            width: isSelected ? 2 : 1,
+          ),
+
+          borderRadius:
+          BorderRadius.circular(12),
+        ),
+
+        child: Column(
+          mainAxisAlignment:
+          MainAxisAlignment.center,
+
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected
+                  ? Theme.of(context)
+                  .colorScheme
+                  .primary
+                  : Colors.grey.shade700,
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isSelected
+                    ? Theme.of(context)
+                    .colorScheme
+                    .primary
+                    : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -690,6 +946,38 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
         const SizedBox(height: 20),
 
+        // ======================================================
+        // CHAPTER / PRACTICAL SELECTION
+        // ======================================================
+
+        Row(
+          children: [
+            Expanded(
+              child: _syllabusTypeButton(
+                icon: Icons.menu_book,
+                title: "Chapters",
+                type: SyllabusType.chapters,
+              ),
+            ),
+
+            const SizedBox(width: 15),
+
+            Expanded(
+              child: _syllabusTypeButton(
+                icon: Icons.science,
+                title: "Practicals",
+                type: SyllabusType.practicals,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // ======================================================
+        // LOAD FILES
+        // ======================================================
+
         SizedBox(
           width: double.infinity,
           height: 50,
@@ -722,31 +1010,45 @@ class _AdminDashboardState extends State<AdminDashboard> {
               : ListView.separated(
             itemCount:
             uploadedFiles.length,
+
             separatorBuilder:
                 (context, index) {
               return const Divider();
             },
+
             itemBuilder:
                 (context, index) {
               final Reference file =
               uploadedFiles[index];
 
               return ListTile(
-                leading: const Icon(
+                leading:
+                const Icon(
                   Icons.description,
                 ),
+
                 title: Text(
                   file.name,
                 ),
+
                 subtitle: Text(
-                  selectedSubject,
+                  "$selectedSubject • "
+                      "${selectedSyllabusType == SyllabusType.chapters ? "Chapters" : "Practicals"}",
                 ),
-                trailing: IconButton(
-                  tooltip: "Delete File",
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
+
+                trailing:
+                IconButton(
+                  tooltip:
+                  "Delete File",
+
+                  icon:
+                  const Icon(
+                    Icons
+                        .delete_outline,
+                    color:
+                    Colors.red,
                   ),
+
                   onPressed: () {
                     deleteFile(file);
                   },
@@ -792,6 +1094,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
+      // ========================================================
+      // DRAWER
+      // ========================================================
+
       drawer: Drawer(
         child: SafeArea(
           child: ListView(
@@ -801,9 +1107,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 decoration: BoxDecoration(
                   color: Colors.blue,
                 ),
+
                 child: Align(
                   alignment:
                   Alignment.bottomLeft,
+
                   child: Text(
                     "Learnova Admin",
                     style: TextStyle(
@@ -816,15 +1124,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
 
+              // ==================================================
+              // DASHBOARD
+              // ==================================================
+
               ListTile(
                 leading: const Icon(
                   Icons.dashboard,
                 ),
+
                 title: const Text(
                   "Dashboard",
                 ),
+
                 selected: currentPage ==
                     AdminPage.dashboard,
+
                 onTap: () {
                   Navigator.pop(context);
 
@@ -835,15 +1150,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 },
               ),
 
+              // ==================================================
+              // MANAGE SYLLABUS
+              // ==================================================
+
               ListTile(
                 leading: const Icon(
                   Icons.menu_book,
                 ),
+
                 title: const Text(
                   "Manage Syllabus",
                 ),
+
                 selected: currentPage ==
                     AdminPage.syllabus,
+
                 onTap: () {
                   Navigator.pop(context);
 
@@ -854,15 +1176,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 },
               ),
 
+              // ==================================================
+              // MANAGE MEDIA
+              // ==================================================
+
               ListTile(
                 leading: const Icon(
                   Icons.image,
                 ),
+
                 title: const Text(
                   "Manage Media",
                 ),
+
                 selected: currentPage ==
                     AdminPage.media,
+
                 onTap: () {
                   Navigator.pop(context);
 
@@ -873,15 +1202,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 },
               ),
 
+              // ==================================================
+              // MANAGE FILES
+              // ==================================================
+
               ListTile(
                 leading: const Icon(
                   Icons.folder,
                 ),
+
                 title: const Text(
                   "Manage Files",
                 ),
+
                 selected:
-                currentPage == AdminPage.files,
+                currentPage ==
+                    AdminPage.files,
+
                 onTap: () {
                   Navigator.pop(context);
 
@@ -896,26 +1233,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
               const Divider(),
 
+              // ==================================================
+              // LOGOUT
+              // ==================================================
+
               ListTile(
                 leading: const Icon(
                   Icons.logout,
                   color: Colors.red,
                 ),
+
                 title: const Text(
                   "Logout",
                   style: TextStyle(
                     color: Colors.red,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                    FontWeight.bold,
                   ),
                 ),
+
                 onTap: () async {
                   Navigator.pop(context);
 
-                  await FirebaseAuth.instance.signOut();
+                  await FirebaseAuth
+                      .instance
+                      .signOut();
 
                   if (!mounted) return;
 
-                  Navigator.pushNamedAndRemoveUntil(
+                  Navigator
+                      .pushNamedAndRemoveUntil(
                     context,
                     "/login",
                         (route) => false,
@@ -927,8 +1274,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
+      // ========================================================
+      // BODY
+      // ========================================================
+
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding:
+        const EdgeInsets.all(20),
         child: currentPageWidget(),
       ),
     );
