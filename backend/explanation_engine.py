@@ -524,7 +524,6 @@ Do not force fields that are not relevant to the supplied content.
 # GEMINI RESPONSE CLEANING
 
 def clean_gemini_response(text: str) -> str:
-
     text = text.strip()
 
     if text.startswith("```json"):
@@ -538,6 +537,21 @@ def clean_gemini_response(text: str) -> str:
 
     return text.strip()
 
+def clean_explanation_text(value):
+    if isinstance(value, str):
+        value = value.replace("**", "")
+        return value.strip()
+
+    if isinstance(value, list):
+        return [clean_explanation_text(item) for item in value]
+
+    if isinstance(value, dict):
+        return {
+            key: clean_explanation_text(item)
+            for key, item in value.items()
+        }
+
+    return value
 # VALIDATION
 
 def validate_explanation(data: dict) -> dict:
@@ -599,6 +613,7 @@ def generate_explanation(
         )
 
     result = validate_explanation(result)
+    result = clean_explanation_text(result)
 
     return result
 
