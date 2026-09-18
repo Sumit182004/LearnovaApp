@@ -11,15 +11,46 @@ class ChatRequest(BaseModel):
     chat_history: list = []
 
 
+def get_language_instruction(language):
+
+    language = language.lower().strip()
+
+    if language == "hindi":
+        return """
+        Reply only in Hindi.
+        Use simple Hindi suitable for school students.
+        Keep important scientific and technical terms in English
+        when that makes them easier to understand.
+        """
+
+    elif language == "hinglish":
+        return """
+        Reply in natural Hinglish.
+        Use a natural combination of Hindi and English,
+        like students commonly use while speaking.
+        Do not reply in pure Hindi.
+        Keep scientific and technical terms in English.
+        """
+
+    elif language == "marathi":
+        return """
+        Reply only in Marathi.
+        Use simple Marathi suitable for school students.
+        Keep important scientific and technical terms in English
+        when that makes them easier to understand.
+        """
+
+    else:
+        return """
+        Reply only in English.
+        Use simple English suitable for school students.
+        """
+
 def build_chat_prompt(
     standard,
     language,
 ):
-    language_instruction = (
-        "Reply only in Hindi."
-        if language.lower() == "hindi"
-        else "Reply only in English."
-    )
+    language_instruction = get_language_instruction(language)
 
     return f"""
     You are Learnova AI Assistant.
