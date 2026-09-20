@@ -162,7 +162,8 @@ def register_assistant_routes(
             # 1. Retrieve textbook knowledge
 
             retrieved_chunks = retrieve_chunks(
-                request.message,
+                question=request.message,
+                chat_history=request.chat_history,
                 top_k=5,
             )
 
