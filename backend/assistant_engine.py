@@ -159,37 +159,27 @@ def register_assistant_routes(
     def chat(request: ChatRequest):
 
         try:
-
-            # -----------------------------------------
             # 1. Retrieve textbook knowledge
-            # -----------------------------------------
 
             retrieved_chunks = retrieve_chunks(
                 request.message,
                 top_k=5,
             )
 
-            # -----------------------------------------
             # 2. Build textbook context
-            # -----------------------------------------
 
             rag_context = build_rag_context(
                 retrieved_chunks
             )
-
-            # -----------------------------------------
             # 3. Build prompt
-            # -----------------------------------------
-
+        
             system_prompt = build_chat_prompt(
                 request.standard,
                 request.language,
                 rag_context,
             )
 
-            # -----------------------------------------
             # 4. Conversation history
-            # -----------------------------------------
 
             contents = []
 
@@ -222,9 +212,7 @@ def register_assistant_routes(
                     ],
                 })
 
-            # -----------------------------------------
             # 5. Current question
-            # -----------------------------------------
 
             contents.append({
                 "role": "user",
@@ -235,9 +223,7 @@ def register_assistant_routes(
                 ],
             })
 
-            # -----------------------------------------
             # 6. Gemini
-            # -----------------------------------------
 
             response = client.models.generate_content(
                 model="gemini-3.5-flash",
