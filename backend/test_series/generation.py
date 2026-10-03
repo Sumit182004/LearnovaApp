@@ -440,8 +440,31 @@ def generate_test(
 
     try:
 
+         # Convert chapter filename into a meaningful
+        # semantic search query for RAG.
+        rag_chapter = chapter.strip()
+
+        if rag_chapter.lower().endswith(".json"):
+            rag_chapter = rag_chapter[:-5]
+
+        rag_chapter = (
+            rag_chapter
+            .replace("_", " ")
+            .strip()
+        )
+
+        rag_query = (
+            f"Class {standard} "
+            f"{subject} "
+            f"chapter {rag_chapter}"
+        )
+
+        print()
+        print("TEST SERIES RAG QUERY:")
+        print(rag_query)
+
         rag_results = retrieve_chunks(
-            question=chapter,
+            question=rag_query,
             chat_history=[],
             top_k=8,
         )
