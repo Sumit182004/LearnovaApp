@@ -25,8 +25,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   String? selectedSubject;
   String? selectedStorageSubject;
   String? selectedChapter;
-
-  List<String> chapters = [];
+  String? selectedChapterSource;
+  List<Map<String, String>> chapters = [];
 
   String error = "";
 
@@ -98,7 +98,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         },
         {
           "name": "Science",
-          "storage": "science",
+          "storage": "biology,chemistry,physics",
         },
         {
           "name": "English",
@@ -134,7 +134,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   // ============================================================
   // LOAD CHAPTERS
   // ============================================================
-
   Future<void> loadChapters({
     required String subject,
     required String storageSubject,
@@ -149,22 +148,34 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     });
 
     try {
-      final ref = FirebaseStorage.instance.ref(
-        "syllabus/$userStandard/$storageSubject/chapters",
+      final storageSubjects = storageSubject.split(",");
+
+      final List<Map<String, String>> loadedChapters = [];
+
+      for (final storageFolder in storageSubjects) {
+        final folder = storageFolder.trim();
+
+        final ref = FirebaseStorage.instance.ref(
+          "syllabus/$userStandard/$folder/chapters",
+        );
+
+        final result = await ref.listAll();
+
+        for (final item in result.items) {
+          if (!item.name.toLowerCase().endsWith(".json")) {
+            continue;
+          }
+
+          loadedChapters.add({
+            "file": item.name,
+            "source": folder,
+          });
+        }
+      }
+
+      loadedChapters.sort(
+            (a, b) => a["file"]!.compareTo(b["file"]!),
       );
-
-      final result = await ref.listAll();
-
-      final loadedChapters = result.items
-          .where(
-            (item) => item.name.toLowerCase().endsWith(".json"),
-      )
-          .map(
-            (item) => item.name,
-      )
-          .toList();
-
-      loadedChapters.sort();
 
       if (!mounted) return;
 
@@ -225,9 +236,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  // ============================================================
   // SUBJECT COLOR
-  // ============================================================
 
   Color getSubjectColor(String subject) {
     switch (subject.toLowerCase()) {
@@ -273,6 +282,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         standard: userStandard,
         subject: selectedSubject!,
         chapter: selectedChapter!,
+        source: selectedChapterSource,
       );
 
       if (!mounted) return;
@@ -663,127 +673,98 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
                         else
                           ...chapters.map(
-                                (chapter) {
+                                (chapterData) {
+                              final chapter = chapterData["file"]!;
+                              final source = chapterData["source"]!;
 
                               final isSelected =
-                                  selectedChapter ==
-                                      chapter;
+                                  selectedChapter == chapter;
 
                               final color =
-                              getSubjectColor(
-                                selectedSubject!,
-                              );
+                              getSubjectColor(selectedSubject!);
 
                               return Padding(
-                                padding:
-                                const EdgeInsets.only(
+                                padding: const EdgeInsets.only(
                                   bottom: 12,
                                 ),
-
                                 child: InkWell(
                                   borderRadius:
-                                  BorderRadius.circular(
-                                    18,
-                                  ),
-
+                                  BorderRadius.circular(18),
                                   onTap: () {
                                     setState(() {
-                                      selectedChapter =
-                                          chapter;
+                                      selectedChapter = chapter;
+                                      selectedChapterSource = source;
                                       error = "";
                                     });
                                   },
-
                                   child: Container(
-                                    padding:
-                                    const EdgeInsets.all(
-                                      17,
-                                    ),
-
-                                    decoration:
-                                    BoxDecoration(
+                                    padding: const EdgeInsets.all(17),
+                                    decoration: BoxDecoration(
                                       color: isSelected
-                                          ? color
-                                          .withOpacity(
-                                        0.15,
-                                      )
-                                          : const Color(
-                                        0xff1A173B,
-                                      ).withOpacity(
-                                        0.6,
-                                      ),
-
+                                          ? color.withOpacity(0.15)
+                                          : const Color(0xff1A173B)
+                                          .withOpacity(0.6),
                                       borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                        18,
-                                      ),
-
+                                      BorderRadius.circular(18),
                                       border: Border.all(
                                         color: isSelected
                                             ? color
-                                            : Colors.white
-                                            .withOpacity(
-                                          0.08,
-                                        ),
+                                            : Colors.white.withOpacity(0.08),
                                       ),
                                     ),
-
                                     child: Row(
                                       children: [
-
                                         Container(
                                           width: 44,
                                           height: 44,
-
-                                          decoration:
-                                          BoxDecoration(
-                                            shape:
-                                            BoxShape
-                                                .circle,
-                                            color: color
-                                                .withOpacity(
-                                              0.15,
-                                            ),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: color.withOpacity(0.15),
                                           ),
-
                                           child: Icon(
                                             Icons.menu_book,
                                             color: color,
                                           ),
                                         ),
 
-                                        const SizedBox(
-                                          width: 14,
-                                        ),
+                                        const SizedBox(width: 14),
 
                                         Expanded(
-                                          child: Text(
-                                            formatChapter(
-                                              chapter,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                formatChapter(chapter),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
 
-                                            style:
-                                            const TextStyle(
-                                              color:
-                                              Colors.white,
-                                              fontSize: 16,
-                                              fontWeight:
-                                              FontWeight.bold,
-                                            ),
+                                              const SizedBox(height: 5),
+
+                                              Text(
+                                                source[0].toUpperCase() +
+                                                    source.substring(1),
+                                                style: TextStyle(
+                                                  color: color.withOpacity(0.9),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
 
                                         Icon(
                                           isSelected
-                                              ? Icons
-                                              .check_circle
+                                              ? Icons.check_circle
                                               : Icons.radio_button_unchecked,
-
                                           color: isSelected
                                               ? color
-                                              : Colors
-                                              .white38,
+                                              : Colors.white38,
                                         ),
                                       ],
                                     ),

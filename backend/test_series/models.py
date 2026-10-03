@@ -9,7 +9,7 @@ class TestGenerationRequest(BaseModel):
     standard: str
     subject: str
     chapter: str
-
+    source: str | None = None
 
 # ============================================================
 # TEST ANSWER

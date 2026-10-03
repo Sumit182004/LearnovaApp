@@ -377,6 +377,7 @@ def generate_test(
     standard: str,
     subject: str,
     chapter: str,
+    source=None,
 ):
 
     # ========================================================
@@ -453,11 +454,19 @@ def generate_test(
             .strip()
         )
 
-        rag_query = (
-            f"Class {standard} "
-            f"{subject} "
-            f"chapter {rag_chapter}"
-        )
+        if source:
+            rag_query = (
+                f"Class {standard} "
+                f"{subject} "
+                f"{source} "
+                f"chapter {rag_chapter}"
+            )
+        else:
+            rag_query = (
+                f"Class {standard} "
+                f"{subject} "
+                f"chapter {rag_chapter}"
+            )
 
         print()
         print("TEST SERIES RAG QUERY:")
@@ -634,6 +643,7 @@ def generate_test(
             "standard": standard,
             "subject": subject,
             "chapter": chapter,
+            "source": source,
             "level": current_level,
             "recommendation": recommendation,
             "questions": questions,
