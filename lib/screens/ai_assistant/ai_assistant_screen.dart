@@ -28,8 +28,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
 
   bool isTyping = false;
   bool isListening = false;
-
+  String selectedLanguage = "English";
   int? speakingIndex;
+
 
   static const String baseUrl =
       "https://learnovaapp-lfgn.onrender.com";
@@ -184,7 +185,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         body: jsonEncode({
           "message": userMessage,
           "standard": "class10",
-          "language": "english",
+          "language": selectedLanguage.toLowerCase(),
           "chat_history": messages.length > 10
               ? messages.sublist(messages.length - 10)
               : messages,
@@ -265,7 +266,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         body: jsonEncode({
           "message": userMessage,
           "standard": "class10",
-          "language": "english",
+          "language": selectedLanguage.toLowerCase(),
           "chat_history": history,
         }),
       );
@@ -401,13 +402,80 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
               color: Colors.white,
             ),
           ),
+
           const SizedBox(width: 8),
-          const Text(
-            "AI Assistant",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+
+          const Expanded(
+            child: Text(
+              "AI Assistant",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // Language selector
+          Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xff211A45),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(.10),
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedLanguage,
+                dropdownColor: const Color(0xff211A45),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.white70,
+                  size: 18,
+                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: "English",
+                    child: Text("English"),
+                  ),
+                  DropdownMenuItem(
+                    value: "Hindi",
+                    child: Text("हिंदी"),
+                  ),
+                  DropdownMenuItem(
+                    value: "Hinglish",
+                    child: Text("Hinglish"),
+                  ),
+                  DropdownMenuItem(
+                    value: "Marathi",
+                    child: Text("मराठी"),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+
+                  setState(() {
+                    selectedLanguage = value;
+                  });
+
+                  // Stop current speech when language changes
+                  _tts.stop();
+
+                  setState(() {
+                    speakingIndex = null;
+                  });
+                },
+              ),
             ),
           ),
         ],

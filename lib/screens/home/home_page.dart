@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   String currentTopic = "The Human Heart";
   double progress = 0.65;
   String userStandard = "class10";
-  // --- Animation Variables ---
+
   late AnimationController _robotController;
   late Animation<Offset> _robotAnimation;
 
@@ -32,24 +32,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     loadUser();
     loadContinueLearning();
 
-    // --- Initialize Animation ---
     _robotController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Speed of the float
-    )..repeat(reverse: true); // Makes it go up and down endlessly
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
 
     _robotAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0, -0.06), // How high it floats
+      end: const Offset(0, -0.06),
     ).animate(CurvedAnimation(
       parent: _robotController,
-      curve: Curves.easeInOut, // Smooth easing
+      curve: Curves.easeInOut,
     ));
   }
 
   @override
   void dispose() {
-    _robotController.dispose(); // Always dispose controllers to prevent memory leaks!
+    _robotController.dispose();
     super.dispose();
   }
 
@@ -66,7 +65,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       final data = userDoc.data()!;
       setState(() {
         userName = data["name"] ?? "User";
-
         userStandard = data["standard"]
             .toString()
             .toLowerCase()
@@ -112,7 +110,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,7 +153,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 _buildRecommendations(),
                 const SizedBox(height: 20),
                 _buildStreakAndXP(),
-                const SizedBox(height: 80), // Padding for floating navbar
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -166,12 +163,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Header ---
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,9 +181,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   color: Colors.white,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               const Text(
                 "Welcome back to Learnova\nYour AI Learning Universe",
                 maxLines: 2,
@@ -201,7 +194,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ],
           ),
         ),
-
         Row(
           children: [
             IconButton(
@@ -211,7 +203,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 color: Colors.white,
               ),
             ),
-
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, "/profile"),
               child: const CircleAvatar(
@@ -231,130 +222,121 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- AI Mascot Banner ---
- // --- AI Mascot Banner (3D Pop-Out Effect & Glow) ---
- // --- AI Mascot Banner (Animated 3D Pop-Out) ---
-   Widget _buildAIBanner() {
-     return SizedBox(
-       height: 175, // INCREASED HEIGHT to fix the 34-pixel overflow error!
-       child: Stack(
-         clipBehavior: Clip.none,
-         alignment: Alignment.bottomCenter,
-         children: [
-           // 1. The Background Banner Card
-           Container(
-             width: double.infinity,
-             padding: const EdgeInsets.all(20),
-             decoration: BoxDecoration(
-               borderRadius: BorderRadius.circular(24),
-               gradient: LinearGradient(
-                 colors: [
-                   const Color(0xff1E1942).withOpacity(0.8),
-                   const Color(0xff121026).withOpacity(0.8),
-                 ],
-               ),
-               border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
-               boxShadow: [
-                 BoxShadow(
-                   color: Colors.purple.withOpacity(0.2),
-                   blurRadius: 20,
-                   spreadRadius: 2,
-                 )
-               ],
-             ),
-             child: Row(
-               children: [
-                 // Text and Button Section
-                 Expanded(
-                   flex: 3,
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     mainAxisSize: MainAxisSize.min,
-                     children: [
-                       Text(
-                         "Hi $userName! 👋",
-                         style: const TextStyle(
-                           color: Colors.white,
-                           fontWeight: FontWeight.bold,
-                           fontSize: 18,
-                         ),
-                       ),
-                       const SizedBox(height: 6),
-                       const Text(
-                         "What do you want to explore today?",
-                         style: TextStyle(color: Colors.white70, fontSize: 13),
-                       ),
-                       const SizedBox(height: 14),
-                       ElevatedButton(
-                         onPressed: () => Navigator.pushNamed(context, "/assistant"),
-                         style: ElevatedButton.styleFrom(
-                           backgroundColor: const Color(0xff6C5CE7),
-                           shape: RoundedRectangleBorder(
-                             borderRadius: BorderRadius.circular(20),
-                           ),
-                           padding: const EdgeInsets.symmetric(
-                             horizontal: 16,
-                             vertical: 10,
-                           ),
-                         ),
-                         child: const Row(
-                           mainAxisSize: MainAxisSize.min,
-                           children: [
-                             Text("Let's Start ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                             Icon(Icons.arrow_forward, size: 16, color: Colors.white),
-                           ],
-                         ),
-                       ),
-                     ],
-                   ),
-                 ),
-                 // Empty space to push the robot to the right
-                 const Expanded(flex: 2, child: SizedBox()),
-               ],
-             ),
-           ),
+  Widget _buildAIBanner() {
+    return SizedBox(
+      height: 175,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xff1E1942).withOpacity(0.8),
+                  const Color(0xff121026).withOpacity(0.8),
+                ],
+              ),
+              border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.2),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Hi $userName! 👋",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "What do you want to explore today?",
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 14),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pushNamed(context, "/assistant"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6C5CE7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Let's Start ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            Icon(Icons.arrow_forward, size: 16, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Expanded(flex: 2, child: SizedBox()),
+              ],
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 5,
+            child: SlideTransition(
+              position: _robotAnimation,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AiAssistantScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.cyanAccent.withOpacity(0.4),
+                        blurRadius: 40,
+                        spreadRadius: -15,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    "assets/ai_mascot.png",
+                    height: 180,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-           // 2. The Animated 3D Floating Robot
-           Positioned(
-             right: 0,
-             bottom: 5,
-             child: SlideTransition(
-               position: _robotAnimation,
-               child: GestureDetector(
-                 onTap: () {
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(
-                       builder: (_) => const AiAssistantScreen(),
-                     ),
-                   );
-                 },
-                 child: Container(
-                   decoration: BoxDecoration(
-                     shape: BoxShape.circle,
-                     boxShadow: [
-                       BoxShadow(
-                         color: Colors.cyanAccent.withOpacity(0.4),
-                         blurRadius: 40,
-                         spreadRadius: -15,
-                       ),
-                     ],
-                   ),
-                   child: Image.asset(
-                     "assets/ai_mascot.png",
-                     height: 180,
-                     fit: BoxFit.contain,
-                   ),
-                 ),
-               ),
-             ),
-           ),
-         ],
-       ),
-     );
-   }
-
-  // --- Subject Universe Horizontal Scroll ---
   Widget _buildSubjectUniverse() {
     final subjects = [
       {
@@ -395,15 +377,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 case 0:
                   openSubject("maths");
                   break;
-
                 case 1:
                   openSubject("physics");
                   break;
-
                 case 2:
                   openSubject("chemistry");
                   break;
-
                 case 3:
                   openSubject("biology");
                   break;
@@ -457,11 +436,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Continue Journey + Time Freeze Split Cards ---
   Widget _buildJourneySection() {
     return Row(
       children: [
-        // Continue Learning Card
         Expanded(
           flex: 3,
           child: Container(
@@ -539,7 +516,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
         ),
         const SizedBox(width: 10),
-        // Time Freeze Card
         Expanded(
           flex: 2,
           child: Container(
@@ -570,7 +546,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Quick Access Tools ---
   Widget _buildQuickAccess() {
     final tools = [
       {
@@ -627,9 +602,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     color: Colors.cyanAccent,
                     size: 22,
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     tool['title'] as String,
                     textAlign: TextAlign.center,
@@ -647,7 +620,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Recommended For You ---
   Widget _buildRecommendations() {
     final items = [
       {'title': 'Why Lightning Bends?', 'tag': 'STORY', 'time': '8 min read', 'color': Colors.purple},
@@ -698,7 +670,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Streak and XP Progress Footer ---
   Widget _buildStreakAndXP() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -722,7 +693,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           Row(
             children: List.generate(
               6,
-              (index) => Container(
+                  (index) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 width: 8,
                 height: 8,
@@ -751,86 +722,145 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // --- Bottom Navigation Bar ---
   Widget _buildBottomNavigationBar() {
     return Container(
-      height: 70,
       decoration: BoxDecoration(
         color: const Color(0xff121026),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(0, Icons.home_filled, "Home"),
-          _navItem(1, Icons.menu_book, "Learn"),
-          // Center AI Tutor Button
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, "/assistant"),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Colors.cyanAccent, Colors.purpleAccent],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purpleAccent.withOpacity(0.4),
-                    blurRadius: 10,
-                  )
-                ],
-              ),
-              child: const Icon(Icons.smart_toy, color: Colors.black, size: 26),
-            ),
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
-          _navItem(3, Icons.insert_chart_outlined, "Progress"),
-      GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ProfilePage(),
-            ),
-          );
-        },
+        ],
+      ),
+      child: SafeArea(
+        top: false,
         child: SizedBox(
-          width: 70,
-          child: _navItem(
-            4,
-            Icons.person_outline,
-            "Profile",
+          height: 64,
+          child: Row(
+            children: [
+              _navItem(
+                index: 0,
+                icon: Icons.home_filled,
+                label: "Home",
+                onTap: () => setState(() => selectedIndex = 0),
+              ),
+              _navItem(
+                index: 1,
+                icon: Icons.menu_book,
+                label: "Learn",
+                onTap: () {
+                  setState(() => selectedIndex = 1);
+                  openSubject("biology");
+                },
+              ),
+              Expanded(
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, "/assistant"),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.cyanAccent, Color(0xff6C5CE7)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xff6C5CE7).withOpacity(0.5),
+                            blurRadius: 14,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.smart_toy_rounded,
+                        color: Color(0xff0B0E1B),
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              _navItem(
+                index: 3,
+                icon: Icons.insert_chart_outlined,
+                label: "Progress",
+                onTap: () => setState(() => selectedIndex = 3),
+              ),
+              _navItem(
+                index: 4,
+                icon: Icons.person_outline,
+                label: "Profile",
+                onTap: () {
+                  setState(() => selectedIndex = 4);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilePage(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),
-        ],
-      ),
     );
   }
 
-  Widget _navItem(int index, IconData icon, String label) {
-    bool isSelected = selectedIndex == index;
-    return InkWell(
-      onTap: () => setState(() => selectedIndex = index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: isSelected ? Colors.purpleAccent : Colors.white38, size: 22),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.purpleAccent : Colors.white38,
-              fontSize: 10,
-            ),
+  Widget _navItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final bool isSelected = selectedIndex == index;
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          splashColor: Colors.purpleAccent.withOpacity(0.12),
+          highlightColor: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.cyanAccent : Colors.white38,
+                  size: isSelected ? 24 : 22,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? Colors.cyanAccent : Colors.white38,
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // --- Helpers ---
   Widget _buildSectionHeader(String title, {bool showSeeAll = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

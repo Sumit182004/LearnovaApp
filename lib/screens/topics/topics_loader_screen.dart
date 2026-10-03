@@ -176,10 +176,6 @@ class _TopicsLoaderScreenState extends State<TopicsLoaderScreen> {
       });
     }
 
-    // ============================================================
-    // IF CONTENT IS ALREADY PRESENT
-    // ============================================================
-
     if (topic["content"] != null) {
       final content = topic["content"];
 
