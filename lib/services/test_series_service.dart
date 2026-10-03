@@ -242,4 +242,3 @@ class TestSeriesService {
     return data;
   }
 }
-

@@ -10,7 +10,7 @@ enum AdminPage {
   syllabus,
   media,
   files,
-}
+} 
 
 enum SyllabusType {
   chapters,
