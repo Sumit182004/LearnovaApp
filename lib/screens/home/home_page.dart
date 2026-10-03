@@ -6,7 +6,7 @@ import 'package:learnovaapp/screens/ai_assistant/ai_assistant_screen.dart';
 import 'package:learnovaapp/screens/dream_lab/Dream_lab_Screen.dart';
 import '../chapters/chapters_screen.dart';
 import '../../profile_page.dart';
-
+import '../test_series/test_series_screen.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -208,11 +208,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               child: const CircleAvatar(
                 radius: 20,
                 backgroundColor: Colors.purpleAccent,
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundImage: AssetImage(
-                    'assets/profile_placeholder.png',
-                  ),
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),
@@ -588,6 +587,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                 );
               }
+
+              if (index == 4) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TestSeriesScreen(),
+                  ),
+                );
+              }
             },
             child: Container(
               width: 80,
@@ -727,7 +735,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       decoration: BoxDecoration(
         color: const Color(0xff121026),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.08)),
+          top: BorderSide(
+            color: Colors.white.withOpacity(0.08),
+          ),
         ),
         boxShadow: [
           BoxShadow(
@@ -743,12 +753,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           height: 64,
           child: Row(
             children: [
+              // HOME
               _navItem(
                 index: 0,
                 icon: Icons.home_filled,
                 label: "Home",
-                onTap: () => setState(() => selectedIndex = 0),
+                onTap: () {
+                  setState(() => selectedIndex = 0);
+                },
               ),
+
+              // LEARN
               _navItem(
                 index: 1,
                 icon: Icons.menu_book,
@@ -758,10 +773,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   openSubject("biology");
                 },
               ),
+
+              // AI ASSISTANT
               Expanded(
                 child: Center(
                   child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, "/assistant"),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      "/assistant",
+                    ),
                     child: Container(
                       width: 50,
                       height: 50,
@@ -770,11 +790,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Colors.cyanAccent, Color(0xff6C5CE7)],
+                          colors: [
+                            Colors.cyanAccent,
+                            Color(0xff6C5CE7),
+                          ],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xff6C5CE7).withOpacity(0.5),
+                            color: const Color(0xff6C5CE7)
+                                .withOpacity(0.5),
                             blurRadius: 14,
                             spreadRadius: 1,
                             offset: const Offset(0, 2),
@@ -790,24 +814,31 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                 ),
               ),
+
+              // MCQ PRACTICE
               _navItem(
                 index: 3,
-                icon: Icons.insert_chart_outlined,
-                label: "Progress",
-                onTap: () => setState(() => selectedIndex = 3),
-              ),
-              _navItem(
-                index: 4,
-                icon: Icons.person_outline,
-                label: "Profile",
+                icon: Icons.fact_check_outlined,
+                label: "MCQ",
                 onTap: () {
-                  setState(() => selectedIndex = 4);
+                  setState(() => selectedIndex = 3);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ProfilePage(),
+                      builder: (_) => const TestSeriesScreen(),
                     ),
                   );
+                },
+              ),
+
+              // PROGRESS
+              _navItem(
+                index: 4,
+                icon: Icons.insert_chart_outlined,
+                label: "Progress",
+                onTap: () {
+                  setState(() => selectedIndex = 4);
                 },
               ),
             ],

@@ -15,6 +15,9 @@ from assessment_engine import register_assessment_routes
 from assistant_engine import (
     register_assistant_routes,
 )
+from test_series.routes import (
+    register_test_series_routes,
+)
 # ENVIRONMENT
 
 load_dotenv()
@@ -145,4 +148,11 @@ register_assistant_routes(
     app,
     db,
     client,
+)
+
+register_test_series_routes(
+    app,
+    db,
+    client,
+    verify_firebase_token,
 )

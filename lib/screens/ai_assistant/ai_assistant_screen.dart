@@ -77,7 +77,6 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
       },
     );
 
-    await _tts.setLanguage("en-US");
     await _tts.setSpeechRate(0.48);
     await _tts.setPitch(1.0);
 
@@ -311,6 +310,27 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
     _scrollToBottom();
   }
 
+
+  Future<void> _setTtsLanguage() async {
+    switch (selectedLanguage) {
+      case "Hindi":
+        await _tts.setLanguage("hi-IN");
+        break;
+
+      case "Marathi":
+        await _tts.setLanguage("mr-IN");
+        break;
+
+      case "Hinglish":
+        await _tts.setLanguage("en-IN");
+        break;
+
+      case "English":
+      default:
+        await _tts.setLanguage("en-US");
+        break;
+    }
+  }
   Future<void> speakMessage(
       String text,
       int index,
@@ -326,6 +346,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
     }
 
     await _tts.stop();
+
+    // Set TTS language according to selected language
+    await _setTtsLanguage();
 
     setState(() {
       speakingIndex = index;
