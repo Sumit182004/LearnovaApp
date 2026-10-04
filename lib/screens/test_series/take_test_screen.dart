@@ -821,9 +821,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> with WidgetsBindingObse
     );
   }
 
-  // ============================================================
   // MCQ WIDGET
-  // ============================================================
 
   Widget _buildMcq(
       String questionId,
@@ -955,9 +953,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> with WidgetsBindingObse
     );
   }
 
-  // ============================================================
   // WRITTEN WIDGET
-  // ============================================================
 
   Widget _buildWritten(
       String questionId,

@@ -147,9 +147,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
           child: Column(
             children: [
 
-              // ============================================================
               // HEADER
-              // ============================================================
 
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -190,9 +188,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
                 ),
               ),
 
-              // ============================================================
               // CHAPTER LIST
-              // ============================================================
 
               Expanded(
                 child: Builder(

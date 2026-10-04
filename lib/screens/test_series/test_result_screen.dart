@@ -510,9 +510,7 @@ class TestResultScreen extends StatelessWidget {
     );
   }
 
-  // ============================================================
   // SUMMARY CARD
-  // ============================================================
 
   Widget _summaryCard(
       String title,
@@ -574,9 +572,7 @@ class TestResultScreen extends StatelessWidget {
     );
   }
 
-  // ============================================================
   // QUESTION RESULT
-  // ============================================================
 
   Widget _questionResultCard(
       int number,

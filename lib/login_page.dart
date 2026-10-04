@@ -123,9 +123,7 @@ class _LoginPageState extends State<LoginPage> {
               .toLowerCase() ??
               "student";
 
-      // ======================================================
       // ADMIN
-      // ======================================================
 
       if (role == "admin") {
         if (!mounted) return;
@@ -139,9 +137,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // ======================================================
       // STUDENT
-      // ======================================================
 
       final bool assessmentCompleted =
           data["assessmentCompleted"] ?? false;
@@ -278,9 +274,7 @@ class _LoginPageState extends State<LoginPage> {
               .toLowerCase() ??
               "student";
 
-      // ======================================================
       // ADMIN
-      // ======================================================
 
       if (role == "admin") {
         if (!mounted) return;
@@ -294,9 +288,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // ======================================================
       // STUDENT
-      // ======================================================
 
       final bool assessmentCompleted =
           data["assessmentCompleted"] ?? false;

@@ -50,10 +50,7 @@ class AssessmentService {
       );
     }
   }
-
-  // =========================================================
   // SUBMIT ASSESSMENT
-  // =========================================================
 
   static Future<Map<String, dynamic>> submitAssessment({
     required String assessmentId,

@@ -7,7 +7,14 @@ import '../../services/test_series_service.dart';
 import 'take_test_screen.dart';
 
 class TestSeriesScreen extends StatefulWidget {
-  const TestSeriesScreen({super.key});
+  final String? initialSubject;
+  final String? initialChapter;
+
+  const TestSeriesScreen({
+    super.key,
+    this.initialSubject,
+    this.initialChapter,
+  });
 
   @override
   State<TestSeriesScreen> createState() => _TestSeriesScreenState();
@@ -36,9 +43,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     loadUser();
   }
 
-  // ============================================================
   // LOAD USER
-  // ============================================================
 
   Future<void> loadUser() async {
     try {
@@ -77,6 +82,52 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         userStandard = standard;
         isLoadingUser = false;
       });
+
+      if (widget.initialSubject != null &&
+          widget.initialChapter != null &&
+          widget.initialSubject!.isNotEmpty &&
+          widget.initialChapter!.isNotEmpty) {
+        final subjects = getSubjects();
+
+        Map<String, String>? matchedSubject;
+
+        for (final item in subjects) {
+          if (item["name"]?.toLowerCase() ==
+              widget.initialSubject!.toLowerCase()) {
+            matchedSubject = item;
+            break;
+          }
+        }
+
+        if (matchedSubject != null) {
+          await loadChapters(
+            subject: matchedSubject["name"]!,
+            storageSubject: matchedSubject["storage"]!,
+          );
+
+          if (!mounted) return;
+
+          final chapterName =
+          widget.initialChapter!.toLowerCase();
+
+          Map<String, String>? matchedChapter;
+
+          for (final item in chapters) {
+            if (item["file"]?.toLowerCase() ==
+                chapterName) {
+              matchedChapter = item;
+              break;
+            }
+          }
+
+          if (matchedChapter != null) {
+            setState(() {
+              selectedChapter = matchedChapter!["file"];
+              selectedChapterSource = matchedChapter["source"];
+            });
+          }
+        }
+      }
     } catch (e) {
       setState(() {
         error = "Unable to load student information.";
@@ -85,9 +136,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  // ============================================================
+  
   // SUBJECTS
-  // ============================================================
+  
 
   List<Map<String, String>> getSubjects() {
     if (userStandard == "class10") {
@@ -131,9 +182,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     return [];
   }
 
-  // ============================================================
+  
   // LOAD CHAPTERS
-  // ============================================================
+  
   Future<void> loadChapters({
     required String subject,
     required String storageSubject,
@@ -193,9 +244,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  // ============================================================
+  
   // FORMAT CHAPTER NAME
-  // ============================================================
+  
 
   String formatChapter(String file) {
     return file
@@ -210,9 +261,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         .join(" ");
   }
 
-  // ============================================================
+  
   // SUBJECT ICON
-  // ============================================================
+  
 
   IconData getSubjectIcon(String subject) {
     switch (subject.toLowerCase()) {
@@ -260,9 +311,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  // ============================================================
+  
   // GENERATE TEST
-  // ============================================================
+  
 
   Future<void> generateTest() async {
     if (selectedSubject == null ||
@@ -312,9 +363,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  // ============================================================
+  
   // BUILD
-  // ============================================================
+  
 
   @override
   Widget build(BuildContext context) {

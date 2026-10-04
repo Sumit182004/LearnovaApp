@@ -32,29 +32,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String selectedClass = "class10";
   String selectedSubject = "Maths";
 
-  // ============================================================
+
   // SYLLABUS TYPE
-  // ============================================================
 
   SyllabusType selectedSyllabusType = SyllabusType.chapters;
 
-  // ============================================================
   // UPLOAD STATE
-  // ============================================================
 
   bool isUploading = false;
   double uploadProgress = 0;
 
-  // ============================================================
   // FILE STATE
-  // ============================================================
 
   List<Reference> uploadedFiles = [];
   bool isLoadingFiles = false;
 
-  // ============================================================
   // SUBJECTS
-  // ============================================================
 
   final Map<String, List<String>> subjectsByClass = {
     "class10": [
@@ -71,24 +64,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ],
   };
 
-  // ============================================================
   // CURRENT SUBJECTS
-  // ============================================================
 
   List<String> get currentSubjects =>
       subjectsByClass[selectedClass] ?? [];
 
-  // ============================================================
   // STORAGE CLASS
-  // ============================================================
 
   String get storageClass {
     return selectedClass.toLowerCase().replaceAll(" ", "");
   }
 
-  // ============================================================
   // STORAGE SUBJECT
-  // ============================================================
 
   String get storageSubject {
     switch (selectedSubject.toLowerCase()) {
@@ -109,9 +96,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // SYLLABUS TYPE FOLDER
-  // ============================================================
 
   String get syllabusTypeFolder {
     return selectedSyllabusType == SyllabusType.chapters
@@ -119,9 +104,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         : "practicals";
   }
 
-  // ============================================================
   // CHANGE CLASS
-  // ============================================================
 
   void changeClass(String? value) {
     if (value == null) return;
@@ -137,9 +120,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
-  // ============================================================
   // CHANGE SUBJECT
-  // ============================================================
 
   void changeSubject(String? value) {
     if (value == null) return;
@@ -150,9 +131,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
-  // ============================================================
   // CHANGE SYLLABUS TYPE
-  // ============================================================
 
   void changeSyllabusType(SyllabusType type) {
     setState(() {
@@ -161,9 +140,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
-  // ============================================================
   // UPLOAD JSON
-  // ============================================================
 
   Future<void> uploadJson() async {
     final result = await FilePicker.platform.pickFiles(
@@ -194,7 +171,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
 
     try {
-      // ========================================================
       // NEW STORAGE STRUCTURE
       //
       // syllabus/
@@ -202,7 +178,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       //     chemistry/
       //       chapters/
       //       practicals/
-      // ========================================================
+
 
       final Reference reference = storage.ref().child(
         "syllabus/"
@@ -269,9 +245,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // UPLOAD IMAGE
-  // ============================================================
 
   Future<void> uploadImage() async {
     final result = await FilePicker.platform.pickFiles(
@@ -352,9 +326,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // LOAD SYLLABUS FILES
-  // ============================================================
 
   Future<void> loadFiles() async {
     setState(() {
@@ -400,9 +372,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // DELETE FILE
-  // ============================================================
 
   Future<void> deleteFile(Reference fileReference) async {
     final bool? shouldDelete = await showDialog<bool>(
@@ -466,9 +436,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // COMMON MESSAGE
-  // ============================================================
 
   void showMessage(
       String message, {
@@ -484,9 +452,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // CLASS AND SUBJECT SELECTORS
-  // ============================================================
 
   Widget selectors() {
     return Column(
@@ -526,9 +492,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
+
   // UPLOAD PROGRESS
-  // ============================================================
+
 
   Widget uploadProgressWidget() {
     if (!isUploading) {
@@ -558,9 +524,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // DASHBOARD
-  // ============================================================
 
   Widget dashboardPage() {
     return SingleChildScrollView(
@@ -631,9 +595,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // DASHBOARD CARD
-  // ============================================================
 
   Widget dashboardCard({
     required IconData icon,
@@ -676,10 +638,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
-
-  // ============================================================
   // MANAGE SYLLABUS
-  // ============================================================
 
   Widget syllabusPage() {
     return SingleChildScrollView(
@@ -804,9 +763,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
+
   // CHAPTER / PRACTICAL BUTTON
-  // ============================================================
+
 
   Widget _syllabusTypeButton({
     required IconData icon,
@@ -882,9 +841,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // MANAGE MEDIA
-  // ============================================================
 
   Widget mediaPage() {
     return SingleChildScrollView(
@@ -925,9 +882,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // MANAGE FILES
-  // ============================================================
 
   Widget filesPage() {
     return Column(
@@ -946,9 +901,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
         const SizedBox(height: 20),
 
-        // ======================================================
+
         // CHAPTER / PRACTICAL SELECTION
-        // ======================================================
 
         Row(
           children: [
@@ -974,9 +928,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
         const SizedBox(height: 20),
 
-        // ======================================================
         // LOAD FILES
-        // ======================================================
 
         SizedBox(
           width: double.infinity,
@@ -1061,9 +1013,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ============================================================
   // PAGE SWITCHING
-  // ============================================================
 
   Widget currentPageWidget() {
     switch (currentPage) {
@@ -1081,9 +1031,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // ============================================================
   // BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -1094,9 +1042,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
-      // ========================================================
       // DRAWER
-      // ========================================================
 
       drawer: Drawer(
         child: SafeArea(
@@ -1274,9 +1220,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
-      // ========================================================
       // BODY
-      // ========================================================
 
       body: Padding(
         padding:
