@@ -1127,6 +1127,7 @@ def register_test_series_routes(
                 "weakTopics": [],
 
                 "recentTests": [],
+                "latestTest": None,
             }
 
         # Overall statistics
@@ -1330,7 +1331,8 @@ def register_test_series_routes(
         # Recent tests
 
         recent_tests = attempts[:5]
-
+        # Latest test
+        latest_test = attempts[0]
         # Response
 
         return {
@@ -1361,6 +1363,19 @@ def register_test_series_routes(
 
             "recentTests":
                 recent_tests,
+                "latestTest": {
+                    "subject":
+                        latest_test.get("subject"),
+
+                    "chapter":
+                        latest_test.get("chapter"),
+
+                    "score":
+                        latest_test.get("score"),
+
+                    "level":
+                        latest_test.get("level"),
+                },
         }
 
     # TEST PROGRESS
@@ -1558,9 +1573,7 @@ def register_test_series_routes(
                 "accuracySum"
             ]
 
-        
         # Current level
-        
 
         current_level = get_student_level(
             db,

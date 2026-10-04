@@ -843,6 +843,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> with WidgetsBindingObse
 
           final option = options[index].toString();
           final optionKey = String.fromCharCode(65 + index);
+          final optionIndex = index.toString();
           final isSelected = selected == optionKey;
 
           return Padding(
@@ -858,7 +859,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> with WidgetsBindingObse
               onTap: () {
                 _selectMcqAnswer(
                   questionId,
-                  optionKey,
+                  optionIndex,
                 );
               },
 
