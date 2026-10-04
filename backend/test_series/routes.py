@@ -23,9 +23,8 @@ from .recommendation import (
     build_student_recommendation,
 )
 
-# ============================================================
 # REGISTER TEST SERIES ROUTES
-# ============================================================
+
 
 def register_test_series_routes(
     app,
@@ -34,9 +33,7 @@ def register_test_series_routes(
     verify_token,
 ):
 
-    # ========================================================
     # GENERATE TEST
-    # ========================================================
 
     @app.post("/generate-test")
     def generate_test_route(
@@ -44,9 +41,7 @@ def register_test_series_routes(
         authorization: str = Header(None),
     ):
 
-        # ----------------------------------------------------
         # Verify Firebase user
-        # ----------------------------------------------------
 
         decoded_token = verify_token(
             authorization
@@ -54,9 +49,7 @@ def register_test_series_routes(
 
         uid = decoded_token["uid"]
 
-        # ----------------------------------------------------
         # Normalize input
-        # ----------------------------------------------------
 
         standard = (
             request.standard
@@ -70,9 +63,7 @@ def register_test_series_routes(
         subject = request.subject.strip()
         chapter = request.chapter.strip()
 
-        # ----------------------------------------------------
         # Validate input
-        # ----------------------------------------------------
 
         if not standard:
 
@@ -95,9 +86,7 @@ def register_test_series_routes(
                 detail="Chapter is required."
             )
 
-        # ----------------------------------------------------
         # Generate personalized test
-        # ----------------------------------------------------
 
         result = generate_test(
             db=db,
@@ -114,10 +103,7 @@ def register_test_series_routes(
             **result,
         }
 
-
-    # ========================================================
     # SUBMIT TEST
-    # ========================================================
 
     @app.post("/submit-test")
     def submit_test(
@@ -125,9 +111,7 @@ def register_test_series_routes(
         authorization: str = Header(None),
     ):
 
-        # ----------------------------------------------------
         # Verify Firebase user
-        # ----------------------------------------------------
 
         decoded_token = verify_token(
             authorization
@@ -135,9 +119,7 @@ def register_test_series_routes(
 
         uid = decoded_token["uid"]
 
-        # ----------------------------------------------------
         # Get generated test
-        # ----------------------------------------------------
 
         test_ref = (
             db.collection("generatedTests")
@@ -155,9 +137,7 @@ def register_test_series_routes(
 
         test_data = test_doc.to_dict()
 
-        # ----------------------------------------------------
         # Verify ownership
-        # ----------------------------------------------------
 
         if test_data.get("userId") != uid:
 
@@ -166,9 +146,7 @@ def register_test_series_routes(
                 detail="You cannot submit this test."
             )
 
-        # ----------------------------------------------------
         # Prevent duplicate submission
-        # ----------------------------------------------------
 
         if test_data.get("status") == "completed":
 
@@ -182,18 +160,14 @@ def register_test_series_routes(
             []
         )
 
-        # ----------------------------------------------------
         # Convert submitted answers to dictionary
-        # ----------------------------------------------------
 
         submitted_answers = {
             answer.questionId: answer.answer
             for answer in request.answers
         }
 
-        # ----------------------------------------------------
         # Counters
-        # ----------------------------------------------------
 
         correct_count = 0
         wrong_count = 0
@@ -205,9 +179,8 @@ def register_test_series_routes(
         topic_performance = {}
         question_results = []
 
-        # ====================================================
+
         # EVALUATE QUESTIONS
-        # ====================================================
 
         for question in questions:
 
@@ -228,9 +201,9 @@ def register_test_series_routes(
                 question_id
             )
 
-            # ------------------------------------------------
+            
             # Initialize topic
-            # ------------------------------------------------
+            
 
             if topic not in topic_performance:
 
@@ -241,9 +214,8 @@ def register_test_series_routes(
                     "unanswered": 0,
                 }
 
-            # =================================================
             # MCQ
-            # =================================================
+
 
             if question_type == "mcq":
 
@@ -335,9 +307,9 @@ def register_test_series_routes(
                         ),
                 })
 
-            # =================================================
+    
             # WRITTEN
-            # =================================================
+        
 
             elif question_type == "written":
 
@@ -352,9 +324,9 @@ def register_test_series_routes(
                     total_question_marks
                 )
 
-                # ------------------------------------------------
+
                 # Unanswered written question
-                # ------------------------------------------------
+                
 
                 if (
                     user_answer is None
@@ -410,9 +382,9 @@ def register_test_series_routes(
 
                     continue
 
-                # ------------------------------------------------
+                
                 # Evaluate written answer
-                # ------------------------------------------------
+                
 
                 evaluation = evaluate_written_answer(
                     client,
@@ -488,9 +460,7 @@ def register_test_series_routes(
                         ],
                 })
 
-        # ========================================================
         # SCORE
-        # ========================================================
 
         if total_marks > 0:
 
@@ -506,9 +476,7 @@ def register_test_series_routes(
 
             score = 0
 
-        # ========================================================
         # TOPIC ACCURACY
-        # ========================================================
 
         for topic, performance in (
             topic_performance.items()
@@ -532,17 +500,13 @@ def register_test_series_routes(
 
                 performance["accuracy"] = 0
 
-        # ========================================================
         # CREATE ATTEMPT ID
-        # ========================================================
 
         attempt_id = str(
             uuid.uuid4()
         )
 
-        # ========================================================
         # DETERMINE TEST NUMBER
-        # ========================================================
 
         previous_attempts = (
             db.collection("users")
@@ -567,9 +531,7 @@ def register_test_series_routes(
 
             test_number += 1
 
-        # ========================================================
         # SAVE ATTEMPT
-        # ========================================================
 
         attempt_data = {
 
@@ -644,9 +606,7 @@ def register_test_series_routes(
             attempt_data
         )
 
-        # ========================================================
         # UPDATE STUDENT LEVEL
-        # ========================================================
 
         subject = test_data.get(
             "subject"
@@ -702,9 +662,7 @@ def register_test_series_routes(
             merge=True,
         )
 
-        # ========================================================
         # MARK TEST AS COMPLETED
-        # ========================================================
 
         test_ref.update({
 
@@ -718,9 +676,7 @@ def register_test_series_routes(
                 attempt_id,
         })
 
-        # ========================================================
         # RESPONSE
-        # ========================================================
 
         return {
 
@@ -774,9 +730,7 @@ def register_test_series_routes(
         }
 
 
-    # ========================================================
     # TEST HISTORY
-    # ========================================================
 
     @app.get("/test-history")
     def get_test_history(
@@ -924,10 +878,7 @@ def register_test_series_routes(
                 attempts,
         }
 
-
-    # ========================================================
     # TEST RESULT
-    # ========================================================
 
     @app.get("/test-result/{attempt_id}")
     def get_test_result(
@@ -1055,10 +1006,364 @@ def register_test_series_routes(
                 ),
         }
 
+    # PROGRESS DASHBOARD
+    
+    @app.get("/progress-dashboard")
+    def get_progress_dashboard(
+        authorization: str = Header(None),
+    ):
+        # Verify Firebase user
 
-    # ========================================================
+        decoded_token = verify_token(
+            authorization
+        )
+
+        uid = decoded_token["uid"]
+
+        # Get user document
+
+        user_ref = (
+            db.collection("users")
+            .document(uid)
+        )
+
+        user_doc = user_ref.get()
+
+        if not user_doc.exists:
+            raise HTTPException(
+                status_code=404,
+                detail="User profile not found."
+            )
+
+        user_data = user_doc.to_dict() or {}
+
+        subject_levels = (
+            user_data.get("subjectLevels", {})
+        )
+
+        # Get all test attempts
+
+        attempts_ref = (
+            user_ref
+            .collection("testAttempts")
+        )
+
+        query = (
+            attempts_ref
+            .order_by(
+                "completedAt",
+                direction=firestore.Query.DESCENDING,
+            )
+            .limit(50)
+        )
+
+        docs = query.stream()
+
+        attempts = []
+
+        for doc in docs:
+
+            data = doc.to_dict() or {}
+
+            attempts.append({
+                "attemptId":
+                    data.get("attemptId"),
+
+                "subject":
+                    data.get("subject"),
+
+                "chapter":
+                    data.get("chapter"),
+
+                "level":
+                    data.get("level"),
+
+                "testNumber":
+                    data.get("testNumber"),
+
+                "score":
+                    data.get("score"),
+
+                "correctCount":
+                    data.get("correctCount"),
+
+                "wrongCount":
+                    data.get("wrongCount"),
+
+                "unansweredCount":
+                    data.get("unansweredCount"),
+
+                "totalQuestions":
+                    data.get("totalQuestions"),
+
+                "topicPerformance":
+                    data.get(
+                        "topicPerformance",
+                        {}
+                    ),
+
+                "completedAt":
+                    data.get("completedAt"),
+            })
+
+        # Empty state
+
+        if not attempts:
+
+            return {
+                "status": "success",
+
+                "overall": {
+                    "testsCompleted": 0,
+                    "averageScore": None,
+                    "highestScore": None,
+                    "latestScore": None,
+                },
+
+                "subjects": subject_levels,
+
+                "trend": [],
+
+                "weakTopics": [],
+
+                "recentTests": [],
+            }
+
+        # Overall statistics
+        scores = [
+            float(attempt["score"])
+            for attempt in attempts
+            if attempt.get("score") is not None
+        ]
+
+        latest_score = (
+            scores[0]
+            if scores
+            else None
+        )
+
+        average_score = (
+            round(
+                sum(scores) / len(scores),
+                2,
+            )
+            if scores
+            else None
+        )
+
+        highest_score = (
+            max(scores)
+            if scores
+            else None
+        )
+
+        # Subject statistics
+
+        subject_stats = {}
+
+        for attempt in attempts:
+
+            subject = attempt.get("subject")
+
+            if not subject:
+                continue
+
+            if subject not in subject_stats:
+
+                subject_stats[subject] = {
+                    "testsCompleted": 0,
+                    "scores": [],
+                }
+
+            subject_stats[subject][
+                "testsCompleted"
+            ] += 1
+
+            score = attempt.get("score")
+
+            if score is not None:
+                subject_stats[subject][
+                    "scores"
+                ].append(
+                    float(score)
+                )
+
+        subjects = {}
+
+        for subject, data in subject_stats.items():
+
+            scores_list = data["scores"]
+
+            subjects[subject] = {
+                "testsCompleted":
+                    data["testsCompleted"],
+
+                "averageScore":
+                    round(
+                        sum(scores_list)
+                        / len(scores_list),
+                        2,
+                    )
+                    if scores_list
+                    else None,
+
+                "currentLevel":
+                    subject_levels.get(
+                        subject,
+                        "beginner",
+                    ),
+            }
+
+        # Include subjects from initial assessment
+        # even if the student has not attempted
+        # a Test Series test yet.
+
+        for subject, level in subject_levels.items():
+
+            if subject not in subjects:
+
+                subjects[subject] = {
+                    "testsCompleted": 0,
+                    "averageScore": None,
+                    "currentLevel": level,
+                }
+
+        # Performance trend
+
+        trend = []
+
+        for attempt in reversed(attempts[:10]):
+
+            if attempt.get("score") is None:
+                continue
+
+            trend.append({
+                "subject":
+                    attempt.get("subject"),
+
+                "chapter":
+                    attempt.get("chapter"),
+
+                "score":
+                    attempt.get("score"),
+
+                "completedAt":
+                    attempt.get("completedAt"),
+            })
+
+        # Weak topics
+
+        topic_data = {}
+
+        for attempt in attempts:
+
+            topic_performance = (
+                attempt.get(
+                    "topicPerformance",
+                    {}
+                )
+            )
+
+            for topic, performance in (
+                topic_performance.items()
+            ):
+
+                accuracy = performance.get(
+                    "accuracy"
+                )
+
+                if accuracy is None:
+                    continue
+
+                if topic not in topic_data:
+
+                    topic_data[topic] = {
+                        "accuracySum": 0,
+                        "count": 0,
+                        "subject":
+                            attempt.get("subject"),
+                        "chapter":
+                            attempt.get("chapter"),
+                    }
+
+                topic_data[topic][
+                    "accuracySum"
+                ] += float(accuracy)
+
+                topic_data[topic][
+                    "count"
+                ] += 1
+
+        weak_topics = []
+
+        for topic, data in topic_data.items():
+
+            average_accuracy = round(
+                data["accuracySum"]
+                / data["count"],
+                2,
+            )
+
+            if average_accuracy < 60:
+
+                weak_topics.append({
+                    "topic": topic,
+
+                    "subject":
+                        data["subject"],
+
+                    "chapter":
+                        data["chapter"],
+
+                    "accuracy":
+                        average_accuracy,
+                })
+
+        # Weakest topics first
+
+        weak_topics.sort(
+            key=lambda x: x["accuracy"]
+        )
+
+        weak_topics = weak_topics[:5]
+
+        # Recent tests
+
+        recent_tests = attempts[:5]
+
+        # Response
+
+        return {
+            "status": "success",
+
+            "overall": {
+                "testsCompleted":
+                    len(attempts),
+
+                "averageScore":
+                    average_score,
+
+                "highestScore":
+                    highest_score,
+
+                "latestScore":
+                    latest_score,
+            },
+
+            "subjects":
+                subjects,
+
+            "trend":
+                trend,
+
+            "weakTopics":
+                weak_topics,
+
+            "recentTests":
+                recent_tests,
+        }
+
     # TEST PROGRESS
-    # ========================================================
 
     @app.get("/test-progress")
     def get_test_progress(
@@ -1106,10 +1411,7 @@ def register_test_series_routes(
             data = doc.to_dict() or {}
 
             attempts.append(data)
-
-        # ----------------------------------------------------
-        # No tests
-        # ----------------------------------------------------
+        # No tests        
 
         if not attempts:
 
@@ -1149,9 +1451,7 @@ def register_test_series_routes(
                     {},
             }
 
-        # ----------------------------------------------------
         # Scores
-        # ----------------------------------------------------
 
         scores = []
 
@@ -1193,9 +1493,9 @@ def register_test_series_routes(
             else None
         )
 
-        # ----------------------------------------------------
+        
         # Weak topics
-        # ----------------------------------------------------
+        
 
         weak_topics = {}
 
@@ -1234,9 +1534,9 @@ def register_test_series_routes(
                         "accuracySum"
                     ] += accuracy
 
-        # ----------------------------------------------------
+        
         # Average topic accuracy
-        # ----------------------------------------------------
+        
 
         for topic, data in (
             weak_topics.items()
@@ -1258,9 +1558,9 @@ def register_test_series_routes(
                 "accuracySum"
             ]
 
-        # ----------------------------------------------------
+        
         # Current level
-        # ----------------------------------------------------
+        
 
         current_level = get_student_level(
             db,
@@ -1303,9 +1603,9 @@ def register_test_series_routes(
         chapter: str,
         authorization: str = Header(None),
     ):
-        # --------------------------------------------
+        # 
         # Verify Firebase user
-        # --------------------------------------------
+        # 
 
         decoded_token = verify_token(
             authorization
@@ -1313,9 +1613,9 @@ def register_test_series_routes(
 
         uid = decoded_token["uid"]
 
-        # --------------------------------------------
+        # 
         # Validate input
-        # --------------------------------------------
+        # 
 
         subject = subject.strip()
         chapter = chapter.strip()

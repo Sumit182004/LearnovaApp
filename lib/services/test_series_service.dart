@@ -7,9 +7,7 @@ class TestSeriesService {
   static const String baseUrl =
       'https://learnovaapp-lfgn.onrender.com';
 
-  // --------------------------------------------------
   // Firebase ID Token
-  // --------------------------------------------------
 
   Future<String> _getIdToken() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -27,9 +25,7 @@ class TestSeriesService {
     return token;
   }
 
-  // --------------------------------------------------
   // Generate Test
-  // --------------------------------------------------
 
   Future<Map<String, dynamic>> generateTest({
     required String standard,
@@ -64,9 +60,7 @@ class TestSeriesService {
     return data;
   }
 
-  // --------------------------------------------------
   // Submit Test
-  // --------------------------------------------------
 
   Future<Map<String, dynamic>> submitTest({
     required String testId,
@@ -97,9 +91,7 @@ class TestSeriesService {
     return data;
   }
 
-  // --------------------------------------------------
 // Test History
-// --------------------------------------------------
 
   Future<List<dynamic>> getTestHistory({
     String? subject,
@@ -140,10 +132,30 @@ class TestSeriesService {
 
     return data['attempts'] ?? [];
   }
+// Progress Dashboard
 
-// --------------------------------------------------
+  Future<Map<String, dynamic>> getProgressDashboard() async {
+    final token = await _getIdToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/progress-dashboard'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        data['detail'] ?? 'Failed to load progress dashboard.',
+      );
+    }
+
+    return data;
+  }
+
 // Test Result
-// --------------------------------------------------
 
   Future<Map<String, dynamic>> getTestResult(
       String attemptId,
@@ -170,9 +182,7 @@ class TestSeriesService {
     return data;
   }
 
-// --------------------------------------------------
 // Test Progress
-// --------------------------------------------------
 
   Future<Map<String, dynamic>> getTestProgress({
     required String subject,
@@ -207,9 +217,7 @@ class TestSeriesService {
     return data;
   }
 
-// --------------------------------------------------
 // Personalized Recommendation
-// --------------------------------------------------
 
   Future<Map<String, dynamic>> getTestRecommendation({
     required String subject,

@@ -7,6 +7,7 @@ import 'package:learnovaapp/screens/dream_lab/Dream_lab_Screen.dart';
 import '../chapters/chapters_screen.dart';
 import '../../profile_page.dart';
 import '../test_series/test_series_screen.dart';
+import '../progress/progress_screen.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -839,7 +840,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 label: "Progress",
                 onTap: () {
                   setState(() => selectedIndex = 4);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProgressScreen(),
+                    ),
+                  );
                 },
+
               ),
             ],
           ),
