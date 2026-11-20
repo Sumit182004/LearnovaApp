@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:learnovaapp/screens/ai_assistant/ai_assistant_screen.dart';
 import 'package:learnovaapp/screens/dream_lab/Dream_lab_Screen.dart';
 import '../chapters/chapters_screen.dart';
-import '../../profile_page.dart';
 import '../test_series/test_series_screen.dart';
 import '../progress/progress_screen.dart';
 class HomePage extends StatefulWidget {
@@ -17,21 +16,87 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   int selectedIndex = 0;
-  String userName = "Mahek";
-  String currentSubject = "Biology";
-  String currentChapter = "Chapter 4";
-  String currentTopic = "The Human Heart";
-  double progress = 0.65;
+
+  String userName = "Student";
   String userStandard = "class10";
+// Continue Learning data
+  String? currentSubject;
+  String? currentChapter;
+  String? currentTopic;
+  double? currentProgress;
+
+// Loading state
+  bool isLoadingUser = true;
 
   late AnimationController _robotController;
   late Animation<Offset> _robotAnimation;
+  List<Map<String, dynamic>> get subjects {
+    if (userStandard == "class12") {
+      return [
+        {
+          "title": "Planet Mathematics",
+          "folder": "maths",
+          "asset": "assets/Maths_3D.png",
+          "glowColor": Colors.lightBlueAccent,
+        },
+        {
+          "title": "Planet Physics",
+          "folder": "physics",
+          "asset": "assets/Physics_3D.png",
+          "glowColor": Colors.cyanAccent,
+        },
+        {
+          "title": "Planet Chemistry",
+          "folder": "chemistry",
+          "asset": "assets/Chemistry_3D.png",
+          "glowColor": Colors.orangeAccent,
+        },
+        {
+          "title": "English",
+          "folder": "english",
+          "asset": null,
+          "glowColor": Colors.purpleAccent,
+        },
+      ];
+    }
 
+    return [
+      {
+        "title": "Planet Mathematics",
+        "folder": "maths",
+        "asset": "assets/Maths_3D.png",
+        "glowColor": Colors.lightBlueAccent,
+      },
+      {
+        "title": "Planet Physics",
+        "folder": "physics",
+        "asset": "assets/Physics_3D.png",
+        "glowColor": Colors.cyanAccent,
+      },
+      {
+        "title": "Planet Chemistry",
+        "folder": "chemistry",
+        "asset": "assets/Chemistry_3D.png",
+        "glowColor": Colors.orangeAccent,
+      },
+      {
+        "title": "Planet Biology",
+        "folder": "biology",
+        "asset": "assets/Biology_3D.png",
+        "glowColor": Colors.greenAccent,
+      },
+      {
+        "title": "English",
+        "folder": "english",
+        "asset": null,
+        "glowColor": Colors.purpleAccent,
+      },
+    ];
+  }
   @override
   void initState() {
     super.initState();
     loadUser();
-    loadContinueLearning();
 
     _robotController = AnimationController(
       vsync: this,
@@ -55,42 +120,50 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Future<void> loadUser() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) {
+      if (mounted) {
+        setState(() => isLoadingUser = false);
+      }
+      return;
+    }
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(uid)
+          .get();
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .get();
-
-    if (userDoc.exists) {
-      final data = userDoc.data()!;
-      setState(() {
-        userName = data["name"] ?? "User";
-        userStandard = data["standard"]
+      if (!mounted) return;
+      if (userDoc.exists) {
+        final data = userDoc.data() ?? {};
+        final standard = (data["standard"] ?? "class10")
             .toString()
             .toLowerCase()
-            .replaceAll(" ", "");
-      });
+            .replaceAll(RegExp(r'[^a-z0-9]'), '');
+        final savedProgress = double.tryParse(
+          data["lastProgress"]?.toString() ?? "",
+        );
+        setState(() {
+          userName = data["name"]?.toString() ?? "Student";
+          userStandard = standard;
+          currentSubject = data["lastSubject"]?.toString();
+          currentChapter = data["lastChapter"]?.toString();
+          currentTopic = data["lastTopic"]?.toString();
+          currentProgress = savedProgress == null
+              ? null
+              : savedProgress.clamp(0.0, 1.0).toDouble();
+
+          isLoadingUser = false;
+        });
+      } else {
+        setState(() => isLoadingUser = false);
+      }
+    } catch (e) {
+      debugPrint("Home page loading error: $e");
+
+      if (mounted) {
+        setState(() => isLoadingUser = false);
+      }
     }
-  }
-
-  Future<void> loadContinueLearning() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final doc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .get();
-
-    if (!doc.exists) return;
-
-    final data = doc.data()!;
-    setState(() {
-      currentSubject = data["lastSubject"] ?? "Biology";
-      currentChapter = data["lastChapter"] ?? "Chapter 4";
-      currentTopic = data["lastTopic"] ?? "The Human Heart";
-    });
   }
 
   Future<void> logout() async {
@@ -100,12 +173,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void openSubject(String subject) {
+    String folder = subject.toLowerCase().trim();
+
+    if (folder == "mathematics" || folder == "math") {
+      folder = "maths";
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChaptersScreen(
           className: userStandard,
-          subject: subject,
+          subject: folder,
         ),
       ),
     );
@@ -149,12 +228,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 const SizedBox(height: 12),
                 _buildQuickAccess(),
                 const SizedBox(height: 24),
-                _buildSectionHeader("Recommended For You", showSeeAll: true),
+                _buildSectionHeader("Recommended For You"),
                 const SizedBox(height: 12),
                 _buildRecommendations(),
                 const SizedBox(height: 20),
-                _buildStreakAndXP(),
-                const SizedBox(height: 20),
+
               ],
             ),
           ),
@@ -197,13 +275,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ),
         Row(
           children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-              ),
-            ),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, "/profile"),
               child: const CircleAvatar(
@@ -338,56 +409,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildSubjectUniverse() {
-    final subjects = [
-      {
-        'title': 'Planet Mathematics',
-        'asset': 'assets/Maths_3D.png',
-        'glowColor': Colors.lightBlueAccent,
-      },
-      {
-        'title': 'Planet Physics',
-        'asset': 'assets/Physics_3D.png',
-        'glowColor': Colors.cyanAccent,
-      },
-      {
-        'title': 'Planet Chemistry',
-        'asset': 'assets/Chemistry_3D.png',
-        'glowColor': Colors.orangeAccent,
-      },
-      {
-        'title': 'Planet Biology',
-        'asset': 'assets/Biology_3D.png',
-        'glowColor': Colors.greenAccent,
-      },
-    ];
+    final subjectList = subjects;
 
     return SizedBox(
       height: 105,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: subjects.length,
+        itemCount: subjectList.length,
         itemBuilder: (context, index) {
-          final subject = subjects[index];
-          final glowColor = subject['glowColor'] as Color;
+          final subject = subjectList[index];
+          final glowColor = subject["glowColor"] as Color;
+          final asset = subject["asset"] as String?;
 
           return GestureDetector(
-            onTap: () {
-              switch (index) {
-                case 0:
-                  openSubject("maths");
-                  break;
-                case 1:
-                  openSubject("physics");
-                  break;
-                case 2:
-                  openSubject("chemistry");
-                  break;
-                case 3:
-                  openSubject("biology");
-                  break;
-              }
-            },
+            onTap: () => openSubject(subject["folder"] as String),
             child: Container(
               margin: const EdgeInsets.only(right: 14),
               child: Column(
@@ -412,15 +448,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        subject['asset'] as String,
+                      child: asset != null
+                          ? Image.asset(
+                        asset,
                         fit: BoxFit.cover,
+                      )
+                          : const Icon(
+                        Icons.menu_book_rounded,
+                        color: Colors.purpleAccent,
+                        size: 32,
                       ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    subject['title'] as String,
+                    subject["title"] as String,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 11,
@@ -437,187 +479,216 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildJourneySection() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: _glassDecoration(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.favorite, color: Colors.redAccent),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            currentTopic,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            "$currentChapter • $currentSubject",
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.white12,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.indigoAccent),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Next: Blood Circulation",
-                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9),
-                    ),
-                    InkWell(
-                      onTap: () => Navigator.pushNamed(context, "/topics"),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xff6C5CE7),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text("Continue ->", style: TextStyle(color: Colors.white, fontSize: 10)),
-                      ),
-                    )
-                  ],
-                )
-              ],
-            ),
+    if (isLoadingUser) {
+      return Container(
+        height: 110,
+        decoration: _glassDecoration(),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.cyanAccent,
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 2,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: _glassDecoration(),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Time Freeze",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+      );
+    }
+
+    final hasLearningActivity =
+        currentSubject != null && currentSubject!.trim().isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: _glassDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.purpleAccent.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  "Freeze any process and explore step by step",
-                  style: TextStyle(color: Colors.white54, fontSize: 9),
+                child: Icon(
+                  hasLearningActivity
+                      ? Icons.menu_book_rounded
+                      : Icons.school_rounded,
+                  color: Colors.purpleAccent,
+                  size: 26,
                 ),
-                SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Icon(Icons.hourglass_bottom, color: Colors.purpleAccent, size: 24),
-                )
-              ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasLearningActivity
+                          ? (currentTopic?.isNotEmpty == true
+                          ? currentTopic!
+                          : "Continue Learning")
+                          : "Start Your Learning Journey",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasLearningActivity
+                          ? "${currentChapter ?? ''} • $currentSubject"
+                          : "Explore your subjects and start learning",
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          if (hasLearningActivity && currentProgress != null) ...[
+            const SizedBox(height: 14),
+            LinearProgressIndicator(
+              value: currentProgress,
+              minHeight: 5,
+              backgroundColor: Colors.white12,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.indigoAccent,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "${(currentProgress! * 100).round()}% completed",
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                if (hasLearningActivity) {
+                  openSubject(currentSubject!);
+                } else {
+                  openSubject(subjects.first["folder"] as String);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff6C5CE7),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                hasLearningActivity
+                    ? "Continue Learning →"
+                    : "Explore Subjects →",
+                style: const TextStyle(fontSize: 11),
+              ),
             ),
           ),
-        )
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildQuickAccess() {
     final tools = [
       {
-        'title': 'Voice Your\nDoubt',
-        'icon': Icons.mic_none,
+        "title": "AI\nAssistant",
+        "icon": Icons.smart_toy_outlined,
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AiAssistantScreen(),
+            ),
+          );
+        },
       },
       {
-        'title': 'Teach Me\nBack',
-        'icon': Icons.record_voice_over_outlined,
+        "title": "Virtual\nLab",
+        "icon": Icons.science_outlined,
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const DreamLabScreen(),
+            ),
+          );
+        },
       },
       {
-        'title': 'Consequence\nLab',
-        'icon': Icons.science_outlined,
+        "title": "Practice\nTest",
+        "icon": Icons.fact_check_outlined,
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const TestSeriesScreen(),
+            ),
+          );
+        },
       },
       {
-        'title': 'Dream Lab\n(Simulations)',
-        'icon': Icons.blur_on,
-      },
-      {
-        'title': 'MCQ\nPractice',
-        'icon': Icons.fact_check_outlined,
+        "title": "My\nProgress",
+        "icon": Icons.analytics_outlined,
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ProgressScreen(),
+            ),
+          );
+        },
       },
     ];
 
     return SizedBox(
-      height: 90,
+      height: 95,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: tools.length,
         itemBuilder: (context, index) {
           final tool = tools[index];
 
           return GestureDetector(
-            onTap: () {
-              if (index == 3) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DreamLabScreen(),
-                  ),
-                );
-              }
-
-              if (index == 4) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TestSeriesScreen(),
-                  ),
-                );
-              }
-            },
+            onTap: tool["onTap"] as VoidCallback,
             child: Container(
-              width: 80,
-              margin: const EdgeInsets.only(right: 10),
+              width: 82,
+              margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.all(8),
               decoration: _glassDecoration(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    tool['icon'] as IconData,
+                    tool["icon"] as IconData,
                     color: Colors.cyanAccent,
-                    size: 22,
+                    size: 24,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 7),
                   Text(
-                    tool['title'] as String,
+                    tool["title"] as String,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 9,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -630,106 +701,74 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildRecommendations() {
-    final items = [
-      {'title': 'Why Lightning Bends?', 'tag': 'STORY', 'time': '8 min read', 'color': Colors.purple},
-      {'title': 'Make a Volcano Erupt', 'tag': 'EXPERIMENT', 'time': '12 min', 'color': Colors.orange},
-      {'title': 'Cell Structure Quiz', 'tag': 'QUIZ', 'time': '15 Questions', 'color': Colors.green},
-    ];
-
-    return SizedBox(
-      height: 140,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.all(10),
-            decoration: _glassDecoration(),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _glassDecoration(),
+      child: Row(
+        children: [
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: Colors.purpleAccent.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.purpleAccent,
+              size: 25,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: (item['color'] as Color).withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    item['tag'] as String,
-                    style: TextStyle(color: item['color'] as Color, fontSize: 8, fontWeight: FontWeight.bold),
+                const Text(
+                  "Personalized Learning",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
                 ),
-                Text(
-                  item['title'] as String,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                const SizedBox(height: 5),
+                const Text(
+                  "Take a test to get recommendations based on your performance.",
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                  ),
                 ),
-                Text(
-                  item['time'] as String,
-                  style: const TextStyle(color: Colors.white38, fontSize: 9),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TestSeriesScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Start a Practice Test →",
+                    style: TextStyle(
+                      color: Colors.purpleAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStreakAndXP() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: _glassDecoration(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.local_fire_department, color: Colors.orangeAccent),
-              SizedBox(width: 6),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("12", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text("Day Streak", style: TextStyle(color: Colors.white38, fontSize: 9)),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            children: List.generate(
-              6,
-                  (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: index < 4 ? Colors.orangeAccent : Colors.white12,
-                ),
-              ),
-            ),
-          ),
-          const Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("420", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text("XP Points", style: TextStyle(color: Colors.white38, fontSize: 9)),
-                ],
-              ),
-              SizedBox(width: 6),
-              Icon(Icons.star, color: Colors.purpleAccent),
-            ],
           ),
         ],
       ),
     );
   }
+
+
 
   Widget _buildBottomNavigationBar() {
     return Container(
@@ -769,20 +808,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 index: 1,
                 icon: Icons.menu_book,
                 label: "Learn",
-                onTap: () {
-                  setState(() => selectedIndex = 1);
-                  openSubject("biology");
-                },
+                  onTap: () {
+                    setState(() => selectedIndex = 1);
+                    openSubject(subjects.first["folder"] as String);
+                  },
               ),
 
               // AI ASSISTANT
               Expanded(
                 child: Center(
                   child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      "/assistant",
-                    ),
+                    onTap: () {
+                      setState(() => selectedIndex = 2);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AiAssistantScreen(),
+                        ),
+                      );
+                    },
                     child: Container(
                       width: 50,
                       height: 50,

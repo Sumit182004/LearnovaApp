@@ -14,9 +14,9 @@ from .performance import (
 )
 from .utils import calculate_time_limit
 
-# ============================================================
+
 # BUILD TEST PROMPT
-# ============================================================
+
 
 def build_test_prompt(
     standard: str,
@@ -223,9 +223,9 @@ correctAnswer must be:
 """
 
 
-# ============================================================
+
 # VALIDATE GENERATED TEST
-# ============================================================
+
 
 def validate_test(
     questions,
@@ -243,9 +243,9 @@ def validate_test(
     if len(questions) != 10:
         return False
 
-    # ========================================================
+    
     # SCIENCE
-    # ========================================================
+    
 
     if subject.lower() == "science":
 
@@ -276,9 +276,9 @@ def validate_test(
         if written_count != 3:
             return False
 
-    # ========================================================
+    
     # OTHER SUBJECTS
-    # ========================================================
+    
 
     else:
 
@@ -288,9 +288,9 @@ def validate_test(
 
                 return False
 
-    # ========================================================
+    
     # INDIVIDUAL QUESTION VALIDATION
-    # ========================================================
+    
 
     for question in questions:
 
@@ -306,9 +306,9 @@ def validate_test(
             "type"
         )
 
-        # ----------------------------------------------------
+        
         # MCQ
-        # ----------------------------------------------------
+        
 
         if question_type == "mcq":
 
@@ -336,9 +336,9 @@ def validate_test(
             ):
                 return False
 
-        # ----------------------------------------------------
+        
         # WRITTEN
-        # ----------------------------------------------------
+        
 
         elif question_type == "written":
 
@@ -366,9 +366,9 @@ def validate_test(
     return True
 
 
-# ============================================================
+
 # GENERATE TEST
-# ============================================================
+
 
 def generate_test(
     db,
@@ -380,18 +380,18 @@ def generate_test(
     source=None,
 ):
 
-    # ========================================================
+    
     # CURRENT STUDENT LEVEL
-    # ========================================================
+    
 
     current_level = get_student_level(
         db,
         uid,
         subject,
     )
-    # --------------------------------------------------
+    
     # Get personalized recommendation
-    # --------------------------------------------------
+    
 
     recommendation_data = build_student_recommendation(
         db=db,
@@ -405,9 +405,9 @@ def generate_test(
         "recommendation"
     ]
 
-    # ========================================================
+    
     # PREVIOUS ATTEMPTS
-    # ========================================================
+    
 
     try:
 
@@ -435,9 +435,9 @@ def generate_test(
         )
     )
 
-    # ========================================================
+    
     # RAG
-    # ========================================================
+    
 
     try:
 
@@ -504,9 +504,9 @@ def generate_test(
             )
         )
 
-    # ========================================================
+    
     # BUILD PROMPT
-    # ========================================================
+    
 
     prompt = build_test_prompt(
     standard=standard,
@@ -518,9 +518,9 @@ def generate_test(
     recommendation=recommendation,
     )
 
-    # ========================================================
+    
     # GEMINI
-    # ========================================================
+    
 
     try:
 
@@ -581,9 +581,9 @@ def generate_test(
             )
         )
 
-    # ========================================================
+    
     # VALIDATE
-    # ========================================================
+    
 
     if not validate_test(
         questions,
@@ -597,26 +597,26 @@ def generate_test(
                 "match the required structure."
             )
         )
-    # ========================================================
+    
     # TIME LIMIT
-    # ========================================================
+    
 
     time_limit_minutes = calculate_time_limit(
         subject,
         len(questions),
     )
 
-    # ========================================================
+    
     # TEST ID
-    # ========================================================
+    
 
     test_id = str(
         uuid.uuid4()
     )
 
-    # ========================================================
+    
     # QUESTION IDs
-    # ========================================================
+    
 
     for index, question in enumerate(
         questions,
@@ -627,9 +627,9 @@ def generate_test(
             f"{test_id}_{index}"
         )
 
-    # ========================================================
+    
     # SAVE GENERATED TEST
-    # ========================================================
+    
 
     generated_test_ref = (
         db.collection("generatedTests")
@@ -654,12 +654,12 @@ def generate_test(
         }
     )
 
-    # ========================================================
+    
     # SAFE QUESTIONS
     #
     # Do NOT send correctAnswer/modelAnswer
     # to Flutter.
-    # ========================================================
+    
 
     safe_questions = []
 

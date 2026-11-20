@@ -4,9 +4,9 @@ from firebase_admin import firestore
 from .utils import normalize_level
 
 
-# ============================================================
+
 # GET STUDENT LEVEL
-# ============================================================
+
 
 def get_student_level(
     db,
@@ -43,9 +43,9 @@ def get_student_level(
     return normalize_level(level)
 
 
-# ============================================================
+
 # GET PREVIOUS ATTEMPTS
-# ============================================================
+
 
 def get_previous_attempts(
     db,
@@ -92,9 +92,9 @@ def get_previous_attempts(
     return attempts
 
 
-# ============================================================
+
 # BUILD PERFORMANCE CONTEXT
-# ============================================================
+
 
 def build_performance_context(attempts):
 
@@ -178,9 +178,9 @@ def build_performance_context(attempts):
     }
 
 
-# ============================================================
+
 # GET RECENT SCORES
-# ============================================================
+
 
 def get_recent_scores(
     db,
@@ -235,9 +235,9 @@ def get_recent_scores(
     return scores
 
 
-# ============================================================
+
 # CALCULATE NEW LEVEL
-# ============================================================
+
 
 def calculate_new_level(
     current_level: str,
@@ -258,9 +258,9 @@ def calculate_new_level(
         sum(scores) / len(scores)
     )
 
-    # --------------------------------------------------------
+    
     # BEGINNER
-    # --------------------------------------------------------
+    
 
     if current_level == "beginner":
 
@@ -272,9 +272,9 @@ def calculate_new_level(
 
         return "beginner"
 
-    # --------------------------------------------------------
+    
     # INTERMEDIATE
-    # --------------------------------------------------------
+    
 
     if current_level == "intermediate":
 
@@ -292,9 +292,9 @@ def calculate_new_level(
 
         return "intermediate"
 
-    # --------------------------------------------------------
+    
     # ADVANCED
-    # --------------------------------------------------------
+    
 
     if current_level == "advanced":
 

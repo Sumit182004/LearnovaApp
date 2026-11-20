@@ -47,6 +47,41 @@ def save_explanation(
         cache_key
     ).set(firestore_doc)
 
+
+def is_valid_cached_explanation(data: dict) -> bool:
+
+    if not isinstance(data, dict):
+        return False
+
+    content_fields = [
+        "introduction",
+        "concept_explanation",
+        "worked_example",
+        "example",
+        "example_or_application",
+        "structure_or_process",
+        "functions_or_explanation",
+        "formula",
+        "observation",
+        "key_points",
+        "reactions",
+        "observations",
+        "practice_questions",
+    ]
+
+    for field in content_fields:
+
+        value = data.get(field)
+
+        if isinstance(value, str) and value.strip():
+            return True
+
+        if isinstance(value, list) and value:
+            return True
+
+    return False
+
+
 # SUBJECT NORMALIZATION
 
 def normalize_subject(subject: str) -> str:
@@ -112,42 +147,67 @@ def extract_formula(blocks: List[Dict]) -> str:
 
     return ""
 
+
 def extract_learning_points(blocks: List[Dict]) -> List[str]:
 
     points = []
-
-    allowed_types = [
-        "theory",
-        "definition",
-        "formula",
-        "proof",
-        "activity",
-        "example",
-        "reaction",
-        "observation",
-        "process",
-        "structure",
-    ]
 
     for block in blocks:
 
         if not isinstance(block, dict):
             continue
 
-        if block.get("type") in allowed_types:
+        block_type = block.get("type", "").lower()
 
-            txt = block.get("text", "").strip()
+        if block_type == "image":
+            continue
 
-            if txt:
-                points.append(txt)
+        name = block.get("name", block.get("label", ""))
+
+        # Theory, definition, example, and other text blocks
+        text = block.get("text", "")
+        if isinstance(text, str) and text.strip():
+            points.append(text.strip())
+
+        # Theorem statements
+        statement = block.get("statement", "")
+        if isinstance(statement, str) and statement.strip():
+            points.append(f"{name}: {statement}" if name else statement)
+
+        # Formula blocks
+        formula = block.get("formula", "")
+        if isinstance(formula, str) and formula.strip():
+            points.append(f"{name}: {formula}" if name else formula)
+
+        # Example and exercise questions
+        question = block.get("question", "")
+        if isinstance(question, str) and question.strip():
+            points.append(f"Question: {question}")
+
+        # Supplied answers or solutions
+        for field in ["solution", "answer", "working"]:
+            value = block.get(field, "")
+            if isinstance(value, str) and value.strip():
+                points.append(f"{field.title()}: {value}")
+
+        # Exercise question lists
+        questions = block.get("questions", [])
+        if isinstance(questions, list):
+            for question in questions:
+                if isinstance(question, str) and question.strip():
+                    points.append(f"Exercise question: {question}")
 
     return points
 
 # TOPIC TYPE
-
 def detect_topic_type(blocks: List[Dict]) -> str:
 
-    block_types = extract_block_types(blocks)
+    block_types = set(extract_block_types(blocks))
+
+    non_exercise_types = block_types - {"exercise", "image"}
+
+    if "exercise" in block_types and not non_exercise_types:
+        return "exercise"
 
     priority = [
         "activity",
@@ -157,16 +217,15 @@ def detect_topic_type(blocks: List[Dict]) -> str:
         "process",
         "structure",
         "example",
-        "exercise",
         "theory",
     ]
 
-    for block in priority:
-
-        if block in block_types:
-            return block
+    for block_type in priority:
+        if block_type in block_types:
+            return block_type
 
     return "theory"
+
 
 # PROMPT ENGINE
 
@@ -554,15 +613,19 @@ def clean_explanation_text(value):
     return value
 # VALIDATION
 
-def validate_explanation(data: dict) -> dict:
 
-    # Do NOT add a common fixed schema here.
-    # The Gemini response is allowed to be subject-specific.
+def validate_explanation(data: dict) -> dict:
 
     if not isinstance(data, dict):
         raise HTTPException(
             status_code=500,
-            detail="Gemini returned an invalid explanation structure."
+            detail="Invalid explanation structure."
+        )
+
+    if not is_valid_cached_explanation(data):
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini returned an empty explanation."
         )
 
     return data
@@ -633,14 +696,11 @@ def register_explanation_routes(
     client = gemini_client
 
     @app.post("/generate-explanation")
-    def generate_explanation_api(
-            request: ExplanationRequest
-    ):
+    def generate_explanation_api(request: ExplanationRequest):
 
         try:
 
             # CACHE KEY
-
             cache_key = build_cache_key(
                 request.standard,
                 request.subject,
@@ -649,33 +709,31 @@ def register_explanation_routes(
             )
 
             # CACHE CHECK
-
-            cached = get_cached_explanation(
-                cache_key
-            )
+            cached = get_cached_explanation(cache_key)
 
             if cached:
 
-                cached.pop("createdAt", None)
+                if is_valid_cached_explanation(cached):
 
-                return {
-                    "status": "cached",
-                    "data": cached,
-                }
+                    cached.pop("createdAt", None)
+
+                    return {
+                        "status": "cached",
+                        "data": cached,
+                    }
+
+                db.collection("explanations").document(
+                    cache_key
+                ).delete()
+
+                print("Deleted invalid explanation cache:", cache_key)
 
             # READ CONTENT
+            section = json.loads(request.content)
 
-            section = json.loads(
-                request.content
-            )
-
-            blocks = section.get(
-                "blocks",
-                []
-            )
+            blocks = section.get("blocks", [])
 
             # GENERATE
-
             explanation = generate_explanation(
                 standard=request.standard,
                 subject=request.subject,
@@ -685,21 +743,18 @@ def register_explanation_routes(
             )
 
             # SAVE CACHE
-
             save_explanation(
                 cache_key,
                 explanation,
             )
 
             # RESPONSE
-
             return {
                 "status": "generated",
                 "data": explanation,
             }
 
         except HTTPException:
-
             raise
 
         except Exception as e:
@@ -710,4 +765,5 @@ def register_explanation_routes(
                 status_code=500,
                 detail=str(e),
             )
+
 

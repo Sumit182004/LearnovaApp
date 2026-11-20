@@ -1,9 +1,9 @@
 from typing import Any
 
 from firebase_admin import firestore
-# ============================================================
+
 # LEVEL MAPPING
-# ============================================================
+
 
 LEVEL_MAP = {
     "beginner": 0,
@@ -11,9 +11,9 @@ LEVEL_MAP = {
     "advanced": 2,
 }
 
-# ============================================================
+
 # GET STUDENT ATTEMPTS FOR RECOMMENDATION
-# ============================================================
+
 
 def get_recommendation_data(
     db,
@@ -61,9 +61,9 @@ def get_recommendation_data(
 
     return attempts
 
-# ============================================================
+
 # BUILD STUDENT FEATURES
-# ============================================================
+
 
 def build_student_features(
     attempts: list[dict[str, Any]],
@@ -87,9 +87,9 @@ def build_student_features(
             ),
         }
 
-    # ---------------------------------------------
+    
     # Overall performance
-    # ---------------------------------------------
+    
 
     scores = [
         float(a.get("score", 0))
@@ -105,19 +105,19 @@ def build_student_features(
         else 0
     )
 
-    # ---------------------------------------------
+    
     # Score trend
     # attempts are newest → oldest
-    # ---------------------------------------------
+    
 
     if len(scores) >= 2:
         score_trend = scores[0] - scores[-1]
     else:
         score_trend = 0
 
-    # ---------------------------------------------
+    
     # Topic performance
-    # ---------------------------------------------
+    
 
     topic_data = {}
 
@@ -150,9 +150,9 @@ def build_student_features(
             topic_data[topic]["attempted"] += attempted
             topic_data[topic]["correct"] += correct
 
-    # ---------------------------------------------
+    
     # Calculate topic accuracy
-    # ---------------------------------------------
+    
 
     weakest_topic = None
     weakest_topic_accuracy = 100
@@ -171,9 +171,9 @@ def build_student_features(
             weakest_topic = topic
             weakest_topic_accuracy = accuracy
 
-    # ---------------------------------------------
+    
     # Overall question statistics
-    # ---------------------------------------------
+    
 
     total_questions = sum(
         int(a.get("totalQuestions", 0))
@@ -208,9 +208,9 @@ def build_student_features(
         else 0
     )
 
-    # ---------------------------------------------
+    
     # Average accuracy
-    # ---------------------------------------------
+    
 
     total_correct = sum(
         int(a.get("correctCount", 0))
@@ -246,9 +246,9 @@ def build_student_features(
         ),
     }
 
-# ============================================================
+
 # BUILD TRAINING DATASET
-# ============================================================
+
 
 def build_training_dataset(
     student_records: list[dict[str, Any]],
@@ -282,25 +282,20 @@ def build_training_dataset(
             "beginner",
         )
 
-        # --------------------------------------------
         # Skip students with no test history
-        # --------------------------------------------
-
+        
         if not attempts:
             continue
 
-        # --------------------------------------------
         # Build features
-        # --------------------------------------------
 
         features = build_student_features(
             attempts=attempts,
             current_level=current_level,
         )
 
-        # --------------------------------------------
+        
         # Add metadata
-        # --------------------------------------------
 
         subject = record.get(
             "subject"
@@ -310,9 +305,7 @@ def build_training_dataset(
             "chapter"
         )
 
-        # --------------------------------------------
         # Training row
-        # --------------------------------------------
 
         row = {
             "subject": subject,
@@ -353,9 +346,8 @@ def build_training_dataset(
 
     return training_data
 
-# ============================================================
+
 # GENERATE INITIAL RECOMMENDATION
-# ============================================================
 
 def generate_recommendation(
     features: dict[str, Any],
@@ -391,9 +383,8 @@ def generate_recommendation(
         0
     )
 
-    # ---------------------------------------------
+    
     # Weak topic
-    # ---------------------------------------------
 
     if (
         weakest_topic
@@ -418,9 +409,8 @@ def generate_recommendation(
             ),
         }
 
-    # ---------------------------------------------
+    
     # Low overall performance
-    # ---------------------------------------------
 
     if (
         latest_score is not None
@@ -445,9 +435,9 @@ def generate_recommendation(
             ),
         }
 
-    # ---------------------------------------------
+    
     # Improvement
-    # ---------------------------------------------
+    
 
     if (
         score_trend > 10
@@ -473,9 +463,9 @@ def generate_recommendation(
             ),
         }
 
-    # ---------------------------------------------
+    
     # Default
-    # ---------------------------------------------
+    
 
     return {
         "subject": subject,
@@ -495,9 +485,8 @@ def generate_recommendation(
         ),
     }
 
-# ============================================================
+
 # BUILD STUDENT RECOMMENDATION
-# ============================================================
 
 def build_student_recommendation(
     db,
