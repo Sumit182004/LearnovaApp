@@ -691,7 +691,6 @@ def register_explanation_routes(
 
     global db
     global client
-
     db = firestore_db
     client = gemini_client
 
@@ -699,7 +698,6 @@ def register_explanation_routes(
     def generate_explanation_api(request: ExplanationRequest):
 
         try:
-
             # CACHE KEY
             cache_key = build_cache_key(
                 request.standard,

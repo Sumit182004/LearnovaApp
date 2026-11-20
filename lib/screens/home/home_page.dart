@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:learnovaapp/screens/ai_assistant/ai_assistant_screen.dart';
 import 'package:learnovaapp/screens/dream_lab/Dream_lab_Screen.dart';
+import 'package:learnovaapp/services/test_series_service.dart';
 import '../chapters/chapters_screen.dart';
 import '../test_series/test_series_screen.dart';
 import '../progress/progress_screen.dart';
+import '../progress/widgets/personalized_learning.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -24,7 +26,52 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   String? currentChapter;
   String? currentTopic;
   double? currentProgress;
+  Map<String, dynamic>? _progressDashboard;
+  Map<String, dynamic>? _homeRecommendation;
 
+  bool _isHomeDataLoading = true;
+  Future<void> _loadHomeLearningData() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isHomeDataLoading = true;
+    });
+
+    try {
+      final dashboard =
+      await TestSeriesService().getProgressDashboard();
+
+      final latestTest = dashboard['latestTest'];
+
+      Map<String, dynamic>? recommendation;
+
+      if (latestTest != null &&
+          latestTest['subject'] != null &&
+          latestTest['chapter'] != null) {
+        recommendation =
+        await TestSeriesService().getTestRecommendation(
+          subject: latestTest['subject'].toString(),
+          chapter: latestTest['chapter'].toString(),
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _progressDashboard = dashboard;
+        _homeRecommendation = recommendation;
+        _isHomeDataLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Home learning data error: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isHomeDataLoading = false;
+      });
+    }
+  }
 // Loading state
   bool isLoadingUser = true;
 
@@ -97,7 +144,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     loadUser();
-
+    _loadHomeLearningData();
     _robotController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -224,8 +271,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 const SizedBox(height: 12),
                 _buildJourneySection(),
                 const SizedBox(height: 24),
-                _buildSectionHeader("Quick Access"),
+                _buildSectionHeader("Your Performance"),
                 const SizedBox(height: 12),
+                _buildHomePerformance(),
+                const SizedBox(height: 24),
+                _buildSectionHeader("Quick Access"),
                 _buildQuickAccess(),
                 const SizedBox(height: 24),
                 _buildSectionHeader("Recommended For You"),
@@ -701,73 +751,112 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildRecommendations() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: _glassDecoration(),
-      child: Row(
-        children: [
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              color: Colors.purpleAccent.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+    if (_isHomeDataLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_homeRecommendation == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: _glassDecoration(),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Personalized Learning',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.purpleAccent,
-              size: 25,
+            SizedBox(height: 8),
+            Text(
+              'Complete a practice test to receive '
+                  'personalized learning recommendations.',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Personalized Learning",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  "Take a test to get recommendations based on your performance.",
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const TestSeriesScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Start a Practice Test →",
-                    style: TextStyle(
-                      color: Colors.purpleAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      );
+    }
+
+    return PersonalizedLearning(
+      recommendation: _homeRecommendation,
+      loading: false,
     );
   }
+  Widget _buildHomePerformance() {
+    final overall =
+    _progressDashboard?['overall']
+    as Map<String, dynamic>?;
 
+    if (overall == null) {
+      return const SizedBox.shrink();
+    }
+    final testsCompleted = overall['testsCompleted'] ?? 0;
+    final averageScore = overall['averageScore'];
+    final highestScore = overall['highestScore'];
+
+    Widget buildStat(String label, String value) {
+      return Expanded(
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: _glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        buildStat(
+          'Tests Completed',
+          '$testsCompleted',
+        ),
+        const SizedBox(width: 10),
+        buildStat(
+          'Average Score',
+          averageScore == null
+              ? '--'
+              : '${averageScore}%',
+        ),
+        const SizedBox(width: 10),
+        buildStat(
+          'Best Score',
+          highestScore == null
+              ? '--'
+              : '${highestScore}%',
+        ),
+      ],
+    );
+  }
 
 
   Widget _buildBottomNavigationBar() {

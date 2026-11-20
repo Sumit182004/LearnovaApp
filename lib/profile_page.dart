@@ -1,9 +1,23 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late Future<Map<String, dynamic>?> _userDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userDataFuture = getUserData();
+  }
 
   Future<Map<String, dynamic>?> getUserData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -15,7 +29,36 @@ class ProfilePage extends StatelessWidget {
         .doc(uid)
         .get();
 
+    if (!snapshot.exists) return null;
+
     return snapshot.data();
+  }
+
+  void _retryLoading() {
+    setState(() {
+      _userDataFuture = getUserData();
+    });
+  }
+
+  String _formatStandard(String standard) {
+    final value = standard.toLowerCase().trim();
+
+    if (value.startsWith('class')) {
+      final number = value.replaceFirst('class', '');
+      return 'Class $number';
+    }
+
+    return standard;
+  }
+
+  void _showComingSoon(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature settings coming soon!'),
+        backgroundColor: const Color(0xff6C5CE7),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -31,7 +74,7 @@ class ProfilePage extends StatelessWidget {
 
             Expanded(
               child: FutureBuilder<Map<String, dynamic>?>(
-                future: getUserData(),
+                future: _userDataFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState ==
                       ConnectionState.waiting) {
@@ -42,8 +85,54 @@ class ProfilePage extends StatelessWidget {
                     );
                   }
 
-                  if (!snapshot.hasData ||
-                      snapshot.data == null) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                              size: 45,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Unable to load profile",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Please check your connection and try again.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _retryLoading,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xff6C5CE7),
+                              ),
+                              child: const Text(
+                                "Retry",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData || snapshot.data == null) {
                     return const Center(
                       child: Text(
                         "User data not found",
@@ -58,15 +147,16 @@ class ProfilePage extends StatelessWidget {
                   final userData = snapshot.data!;
 
                   final name =
-                      userData["name"] ?? "Student";
+                  (userData["name"] ?? "Student").toString();
 
-                  final standard =
-                      userData["standard"] ?? "N/A";
+                  final standard = _formatStandard(
+                    (userData["standard"] ?? "N/A").toString(),
+                  );
 
-                  final email =
-                      authUser?.email ?? "Unknown";
+                  final email = authUser?.email ?? "Unknown";
 
                   return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
                       20,
                       10,
@@ -82,16 +172,14 @@ class ProfilePage extends StatelessWidget {
 
                         const SizedBox(height: 28),
 
-                        _buildSectionTitle(
-                          "Account",
-                        ),
+                        _buildSectionTitle("Account"),
 
                         const SizedBox(height: 10),
 
                         _buildInfoCard(
                           icon: Icons.person_outline,
                           title: "Name",
-                          value: name.toString(),
+                          value: name,
                         ),
 
                         _buildInfoCard(
@@ -103,14 +191,12 @@ class ProfilePage extends StatelessWidget {
                         _buildInfoCard(
                           icon: Icons.school_outlined,
                           title: "Standard",
-                          value: standard.toString(),
+                          value: standard,
                         ),
 
                         const SizedBox(height: 24),
 
-                        _buildSectionTitle(
-                          "Preferences",
-                        ),
+                        _buildSectionTitle("Preferences"),
 
                         const SizedBox(height: 10),
 
@@ -118,14 +204,18 @@ class ProfilePage extends StatelessWidget {
                           icon: Icons.language,
                           title: "Language",
                           subtitle: "English",
-                          onTap: () {},
+                          onTap: () {
+                            _showComingSoon("Language");
+                          },
                         ),
 
                         _buildActionCard(
                           icon: Icons.notifications_none,
                           title: "Notifications",
                           subtitle: "Manage notifications",
-                          onTap: () {},
+                          onTap: () {
+                            _showComingSoon("Notifications");
+                          },
                         ),
 
                         const SizedBox(height: 30),
@@ -207,8 +297,7 @@ class ProfilePage extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.purpleAccent
-                    .withOpacity(0.35),
+                color: Colors.purpleAccent.withOpacity(0.35),
                 blurRadius: 25,
                 spreadRadius: 2,
               ),
@@ -275,8 +364,7 @@ class ProfilePage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1A173B)
-            .withOpacity(0.75),
+        color: const Color(0xff1A173B).withOpacity(0.75),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withOpacity(0.08),
@@ -289,8 +377,7 @@ class ProfilePage extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: const Color(0xff211A45),
-              borderRadius:
-              BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
@@ -303,8 +390,7 @@ class ProfilePage extends StatelessWidget {
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
@@ -346,8 +432,7 @@ class ProfilePage extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xff1A173B)
-              .withOpacity(0.75),
+          color: const Color(0xff1A173B).withOpacity(0.75),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Colors.white.withOpacity(0.08),
@@ -360,8 +445,7 @@ class ProfilePage extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: const Color(0xff211A45),
-                borderRadius:
-                BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
@@ -374,8 +458,7 @@ class ProfilePage extends StatelessWidget {
 
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
@@ -416,15 +499,25 @@ class ProfilePage extends StatelessWidget {
       height: 52,
       child: ElevatedButton.icon(
         onPressed: () async {
-          await FirebaseAuth.instance.signOut();
+          try {
+            await FirebaseAuth.instance.signOut();
 
-          if (!context.mounted) return;
+            if (!context.mounted) return;
 
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            "/login",
-                (route) => false,
-          );
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              "/login",
+                  (route) => false,
+            );
+          } catch (e) {
+            if (!context.mounted) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Unable to logout. Please try again."),
+              ),
+            );
+          }
         },
         icon: const Icon(
           Icons.logout,
